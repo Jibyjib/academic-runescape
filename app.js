@@ -114,10 +114,10 @@ function getSkillAccent(skillId) {
   // matches your mental color notes
   switch (skillId) {
     case "em": return "#22c55e";                 
-    case "thermo_statmech": return "#ef4444";   
+    case "thermo_statmech": return "#2dd4bf";   
     case "qm": return "#a855f7";                
     case "qft": return "#6366f1";               
-    case "gr": return "#2dd4bf";                 
+    case "gr": return "#f59e0b";                 
     case "classical_mechanics": return "#ef4444"; 
     case "cosmo": return "#111111";              
     default: return "#7c5cff";
