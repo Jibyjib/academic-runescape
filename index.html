@@ -9,7 +9,7 @@
 <body>
   <h1>Academic RuneScape</h1>
 
-  <section class="panel">
+  <section class="panel" id="folderPanel">
     <button id="chooseFolderBtn" type="button">Choose Data Folder</button>
     <span id="folderStatus" class="muted">No folder chosen</span>
     <div class="muted small" style="margin-top:8px;">
@@ -17,16 +17,7 @@
     </div>
   </section>
 
-  <h2 class="sectionTitle">Physics</h2>
-  <div id="skillGridPhysics" class="skillGrid"></div>
-
-  <h2 class="sectionTitle">Elite Skills</h2>
-  <div id="skillGridElite" class="skillGrid"></div>
-
-  <h2 class="sectionTitle">Math</h2>
-  <div id="skillGridMath" class="skillGrid"></div>
-  <p class="muted">No math skills yet — but the slot is ready.</p>
-
+  <!-- Move Add XP up here -->
   <h2>Add XP</h2>
   <section class="panel">
     <div class="xpRow">
@@ -52,10 +43,26 @@
       <button id="addXpBtn" type="button">Add XP</button>
     </div>
 
-    <div class="muted small" style="margin-top:10px;">
-      Tip: click a skill name to open its “level guide”.
+    <div class="suggestRow">
+      <div class="muted small" style="margin-top:10px;">
+        Suggested techniques (based on your current level):
+      </div>
+      <div id="suggestedTechniques" class="chipRow"></div>
+      <div class="muted small" style="margin-top:10px;">
+        Tip: click a skill name to open its “level guide”.
+      </div>
     </div>
   </section>
+
+  <h2 class="sectionTitle">Physics</h2>
+  <div id="skillGridPhysics" class="skillGrid"></div>
+
+  <h2 class="sectionTitle">Elite Skills</h2>
+  <div id="skillGridElite" class="skillGrid"></div>
+
+  <h2 class="sectionTitle">Math</h2>
+  <div id="skillGridMath" class="skillGrid"></div>
+  <p class="muted">No math skills yet — but the slot is ready.</p>
 
   <!-- =========================
        SKILL MODAL (popup)
@@ -80,11 +87,6 @@
       </div>
 
       <div class="modalSection">
-        <div class="modalSectionTitle">Suggested next</div>
-        <ul id="modalSuggestedTechniques" class="list"></ul>
-      </div>
-
-      <div class="modalSection">
         <div class="modalSectionTitle">Techniques</div>
         <input id="modalTechniqueSearch" class="modalSearch" placeholder="Filter techniques..." />
         <ul id="modalTechniques" class="list"></ul>
@@ -94,14 +96,13 @@
 
   <!-- =========================
        NO-SERVER SKILL LOADING
-       Each skills/*.js should push into:
-       window.ACAD_RS_SKILLS
+       Each skills/*.js pushes into window.ACAD_RS_SKILLS
        ========================= -->
   <script>
-    window.ACAD_RS_SKILLS = window.ACAD_RS_SKILLS || [];
+    window.ACAD_RS_SKILLS = [];
   </script>
 
-  <!-- List your skills here (one per file) -->
+  <!-- Skills -->
   <script src="skills/classical_mechanics.js"></script>
   <script src="skills/electromagnetism.js"></script>
   <script src="skills/quantum_mechanics.js"></script>
