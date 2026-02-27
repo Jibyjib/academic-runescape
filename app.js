@@ -1,45 +1,22 @@
 // app.js
 // Core app logic for Academic RuneScape (NO SERVER / file:// friendly).
-// - Skills are loaded via classic <script src="skills/..."> tags into window.SKILL_DEFS
-// - XP persistence: localStorage by default
-// - Optional: File System Access API if available + user picks a folder (kept, but not required)
+// Skills are loaded via classic <script src="skills/..."> tags that push into:
+//   window.ACAD_RS_SKILLS = window.ACAD_RS_SKILLS || []
+// Optional persistence:
+//   - localStorage always
+//   - File System Access API if available + user picks a folder (NOT required)
 
 const XP_FILE = "xp_log.jsonl";
 const LS_KEY = "academic_runescape_xp_log_v1";
 
-// ---------- DOM ----------
-const chooseFolderBtn = document.getElementById("chooseFolderBtn");
-const folderStatus = document.getElementById("folderStatus");
-
-const skillGridPhysics = document.getElementById("skillGridPhysics");
-const skillGridElite = document.getElementById("skillGridElite");
-const skillGridMath = document.getElementById("skillGridMath");
-
-const skillSelect = document.getElementById("skillSelect");
-const techniqueInput = document.getElementById("techniqueInput");
-const techniqueList = document.getElementById("techniqueList");
-const activitySelect = document.getElementById("activitySelect");
-const noteInput = document.getElementById("noteInput");
-const addXpBtn = document.getElementById("addXpBtn");
-
-// Modal
-const modalBackdrop = document.getElementById("modalBackdrop");
-const skillModal = document.getElementById("skillModal");
-const closeModalBtn = document.getElementById("closeModalBtn");
-const modalTitle = document.getElementById("modalTitle");
-const modalSubtitle = document.getElementById("modalSubtitle");
-const modalDescription = document.getElementById("modalDescription");
-const modalMilestones = document.getElementById("modalMilestones");
-const modalTechniques = document.getElementById("modalTechniques");
-const modalTechniqueSearch = document.getElementById("modalTechniqueSearch");
-
+// ---------- State ----------
 let folderHandle = null;
 
-// ---------- Skills (loaded from window.SKILL_DEFS) ----------
-let skills = Array.isArray(window.SKILL_DEFS) ? window.SKILL_DEFS : [];
-let skillById = new Map(skills.map(s => [s.id, s]));
+// Skills registry (global, produced by <script src="skills/..."> tags)
+let skills = [];
+let skillById = new Map();
 
-// ---------- State ----------
+// XP
 let xpBySkill = new Map();     // id -> total xp
 let xpLog = [];                // array of entries (localStorage)
 
@@ -64,19 +41,34 @@ function progressToNextLevel(xp) {
   return { lvl, frac: clamp01(frac), toNext: Math.max(0, hi - xp) };
 }
 
-// ---------- Folder (optional) ----------
+// Techniques are objects: { level: number, name: string }
+function normalizeTechniques(raw) {
+  const arr = Array.isArray(raw) ? raw : [];
+  // Filter out junk, coerce level to number, keep name string
+  const cleaned = arr
+    .filter(t => t && typeof t === "object")
+    .map(t => ({
+      level: Number(t.level ?? 0),
+      name: String(t.name ?? "").trim(),
+    }))
+    .filter(t => t.name.length > 0 && Number.isFinite(t.level));
+  cleaned.sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+  return cleaned;
+}
+
+// ---------- Persistence: Folder (optional) ----------
 function canUseFolderPicker() {
   return !!(window.isSecureContext && window.showDirectoryPicker);
 }
 
-function setFolderStatus() {
-  if (!folderStatus) return;
+function setFolderStatus(folderStatusEl) {
+  if (!folderStatusEl) return;
   if (folderHandle) {
-    folderStatus.textContent = "Folder chosen ✓";
+    folderStatusEl.textContent = "Folder chosen ✓";
   } else if (canUseFolderPicker()) {
-    folderStatus.textContent = "No folder chosen";
+    folderStatusEl.textContent = "No folder chosen";
   } else {
-    folderStatus.textContent = "Folder saving unavailable (using local storage)";
+    folderStatusEl.textContent = "Folder saving unavailable (using local storage)";
   }
 }
 
@@ -104,7 +96,7 @@ async function readAllLines(dirHandle, filename) {
   }
 }
 
-// ---------- LocalStorage XP log ----------
+// ---------- Persistence: LocalStorage XP log ----------
 function loadLocalLog() {
   try {
     const raw = localStorage.getItem(LS_KEY);
@@ -123,32 +115,42 @@ function saveLocalLog(log) {
   }
 }
 
-// ---------- Rendering ----------
-function renderAll() {
-  skillGridPhysics.innerHTML = "";
-  skillGridElite.innerHTML = "";
-  skillGridMath.innerHTML = "";
-
-  const physics = skills.filter(s => s.category === "physics" && !s.isElite);
-  const elite = skills.filter(s => s.category === "physics" && s.isElite);
-  const math = skills.filter(s => s.category === "math");
-
-  for (const s of physics) skillGridPhysics.appendChild(renderSkillCard(s));
-  for (const s of elite) skillGridElite.appendChild(renderSkillCard(s));
-  for (const s of math) skillGridMath.appendChild(renderSkillCard(s));
-
-  // Skill dropdown
-  skillSelect.innerHTML = "";
-  for (const s of skills) {
-    const opt = document.createElement("option");
-    opt.value = s.id;
-    opt.textContent = s.isElite ? `${s.name} (Elite)` : s.name;
-    skillSelect.appendChild(opt);
+// ---------- XP rebuild ----------
+function rebuildXpFromLocalLog() {
+  xpBySkill = new Map();
+  for (const entry of xpLog) {
+    const sid = entry.skillId;
+    const amt = Number(entry.xp ?? 0);
+    if (!skillById.has(sid)) continue;
+    xpBySkill.set(sid, (xpBySkill.get(sid) ?? 0) + amt);
   }
-  updateTechniqueDatalist();
 }
 
-function renderSkillCard(skill) {
+async function rebuildXpFromFolderLog() {
+  xpBySkill = new Map();
+  const lines = folderHandle ? await readAllLines(folderHandle, XP_FILE) : [];
+  for (const line of lines) {
+    try {
+      const entry = JSON.parse(line);
+      const sid = entry.skillId;
+      const amt = Number(entry.xp ?? 0);
+      if (!skillById.has(sid)) continue;
+      xpBySkill.set(sid, (xpBySkill.get(sid) ?? 0) + amt);
+    } catch {
+      // ignore malformed lines
+    }
+  }
+}
+
+// ---------- Skills registry loading ----------
+function refreshSkillsFromRegistry() {
+  // Per your requirement:
+  skills = window.ACAD_RS_SKILLS || [];
+  skillById = new Map(skills.map(s => [s.id, s]));
+}
+
+// ---------- Rendering ----------
+function renderSkillCard(skill, openSkillModal) {
   const xp = xpBySkill.get(skill.id) ?? 0;
   const { lvl, frac } = progressToNextLevel(xp);
 
@@ -185,136 +187,167 @@ function renderSkillCard(skill) {
   return card;
 }
 
-function updateTechniqueDatalist() {
+function renderAll(dom, openSkillModal) {
+  const {
+    skillGridPhysics,
+    skillGridElite,
+    skillGridMath,
+    skillSelect,
+  } = dom;
+
+  skillGridPhysics.innerHTML = "";
+  skillGridElite.innerHTML = "";
+  skillGridMath.innerHTML = "";
+
+  const physics = skills.filter(s => s.category === "physics" && !s.isElite);
+  const elite = skills.filter(s => s.category === "physics" && s.isElite);
+  const math = skills.filter(s => s.category === "math");
+
+  for (const s of physics) skillGridPhysics.appendChild(renderSkillCard(s, openSkillModal));
+  for (const s of elite) skillGridElite.appendChild(renderSkillCard(s, openSkillModal));
+  for (const s of math) skillGridMath.appendChild(renderSkillCard(s, openSkillModal));
+
+  // Skill dropdown
+  skillSelect.innerHTML = "";
+  for (const s of skills) {
+    const opt = document.createElement("option");
+    opt.value = s.id;
+    opt.textContent = s.isElite ? `${s.name} (Elite)` : s.name;
+    skillSelect.appendChild(opt);
+  }
+}
+
+function updateTechniqueDatalist(dom) {
+  const { skillSelect, techniqueList } = dom;
   const sid = skillSelect.value;
   const s = skillById.get(sid);
+
   techniqueList.innerHTML = "";
   if (!s) return;
 
-  for (const t of (s.techniques ?? [])) {
+  const techniques = normalizeTechniques(s.techniques);
+  for (const t of techniques) {
     const opt = document.createElement("option");
-    opt.value = t;
+    // Per requirement: dropdown/datalist shows technique.name
+    opt.value = t.name;
     techniqueList.appendChild(opt);
   }
 }
 
 // ---------- Modal ----------
-let lastFocusedEl = null;
+function makeModalController(dom) {
+  const {
+    modalBackdrop,
+    skillModal,
+    closeModalBtn,
+    modalTitle,
+    modalSubtitle,
+    modalDescription,
+    modalMilestones,
+    modalTechniques,
+    modalTechniqueSearch,
+  } = dom;
 
-function openSkillModal(skillId) {
-  const s = skillById.get(skillId);
-  if (!s) return;
+  let lastFocusedEl = null;
 
-  lastFocusedEl = document.activeElement;
-
-  modalTitle.textContent = s.isElite ? `${s.name} (Elite)` : s.name;
-  modalSubtitle.textContent = s.category === "physics" ? "Physics skill" : "Math skill";
-  modalDescription.textContent = s.description ?? "";
-
-  // Milestones
-  modalMilestones.innerHTML = "";
-  for (const m of (s.milestones ?? [])) {
-    const li = document.createElement("li");
-    li.textContent = `Level ${m.level}: ${m.text}`;
-    modalMilestones.appendChild(li);
-  }
-  if (!s.milestones || s.milestones.length === 0) {
-    const li = document.createElement("li");
-    li.textContent = "No milestones yet.";
-    modalMilestones.appendChild(li);
+  function isModalOpen() {
+    return !skillModal.hidden;
   }
 
-  // Techniques
-  modalTechniqueSearch.value = "";
-  renderModalTechniques(s.techniques ?? []);
-
-  modalBackdrop.hidden = false;
-  skillModal.hidden = false;
-  closeModalBtn.focus();
-}
-
-function renderModalTechniques(techniques) {
-  modalTechniques.innerHTML = "";
-  if (techniques.length === 0) {
-    const li = document.createElement("li");
-    li.textContent = "No techniques yet.";
-    modalTechniques.appendChild(li);
-    return;
+  function findSkillIdByModalTitle() {
+    const raw = modalTitle.textContent.replace(" (Elite)", "").trim();
+    const match = skills.find(s => s.name === raw);
+    return match ? match.id : "";
   }
-  for (const t of techniques) {
-    const li = document.createElement("li");
-    li.textContent = t;
-    modalTechniques.appendChild(li);
-  }
-}
 
-function closeSkillModal() {
-  modalBackdrop.hidden = true;
-  skillModal.hidden = true;
-  if (lastFocusedEl && typeof lastFocusedEl.focus === "function") lastFocusedEl.focus();
-}
+  function renderModalTechniques(techniques) {
+    modalTechniques.innerHTML = "";
+    if (!techniques || techniques.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "No techniques yet.";
+      modalTechniques.appendChild(li);
+      return;
+    }
 
-function isModalOpen() {
-  return !skillModal.hidden;
-}
-
-// ESC + backdrop click
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && isModalOpen()) closeSkillModal();
-});
-modalBackdrop.addEventListener("click", () => closeSkillModal());
-closeModalBtn.addEventListener("click", () => closeSkillModal());
-
-// technique filter
-modalTechniqueSearch.addEventListener("input", () => {
-  const sid = findSkillIdByModalTitle();
-  const s = skillById.get(sid);
-  if (!s) return;
-
-  const q = modalTechniqueSearch.value.trim().toLowerCase();
-  const list = (s.techniques ?? []).filter(t => t.toLowerCase().includes(q));
-  renderModalTechniques(list);
-});
-
-function findSkillIdByModalTitle() {
-  const raw = modalTitle.textContent.replace(" (Elite)", "").trim();
-  const match = skills.find(s => s.name === raw);
-  return match ? match.id : "";
-}
-
-// ---------- XP persistence ----------
-function rebuildXpFromLocalLog() {
-  xpBySkill = new Map();
-  for (const entry of xpLog) {
-    const sid = entry.skillId;
-    const amt = Number(entry.xp ?? 0);
-    if (!skillById.has(sid)) continue;
-    xpBySkill.set(sid, (xpBySkill.get(sid) ?? 0) + amt);
-  }
-}
-
-async function rebuildXpFromFolderLog() {
-  xpBySkill = new Map();
-  const lines = folderHandle ? await readAllLines(folderHandle, XP_FILE) : [];
-  for (const line of lines) {
-    try {
-      const entry = JSON.parse(line);
-      const sid = entry.skillId;
-      const amt = Number(entry.xp ?? 0);
-      if (!skillById.has(sid)) continue;
-      xpBySkill.set(sid, (xpBySkill.get(sid) ?? 0) + amt);
-    } catch {
-      // ignore malformed lines
+    const sorted = normalizeTechniques(techniques);
+    for (const t of sorted) {
+      const li = document.createElement("li");
+      // Per requirement: modal displays "Level X: technique.name"
+      li.textContent = `Level ${t.level}: ${t.name}`;
+      modalTechniques.appendChild(li);
     }
   }
+
+  function openSkillModal(skillId) {
+    const s = skillById.get(skillId);
+    if (!s) return;
+
+    lastFocusedEl = document.activeElement;
+
+    modalTitle.textContent = s.isElite ? `${s.name} (Elite)` : s.name;
+    modalSubtitle.textContent = s.category === "physics" ? "Physics skill" : "Math skill";
+    modalDescription.textContent = s.description ?? "";
+
+    // Milestones
+    modalMilestones.innerHTML = "";
+    for (const m of (s.milestones ?? [])) {
+      const li = document.createElement("li");
+      li.textContent = `Level ${m.level}: ${m.text}`;
+      modalMilestones.appendChild(li);
+    }
+    if (!s.milestones || s.milestones.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "No milestones yet.";
+      modalMilestones.appendChild(li);
+    }
+
+    // Techniques
+    modalTechniqueSearch.value = "";
+    renderModalTechniques(s.techniques ?? []);
+
+    modalBackdrop.hidden = false;
+    skillModal.hidden = false;
+    closeModalBtn.focus();
+  }
+
+  function closeSkillModal() {
+    modalBackdrop.hidden = true;
+    skillModal.hidden = true;
+    if (lastFocusedEl && typeof lastFocusedEl.focus === "function") lastFocusedEl.focus();
+  }
+
+  // ESC + backdrop click
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && isModalOpen()) closeSkillModal();
+  });
+  modalBackdrop.addEventListener("click", () => closeSkillModal());
+  closeModalBtn.addEventListener("click", () => closeSkillModal());
+
+  // technique filter (object-aware)
+  modalTechniqueSearch.addEventListener("input", () => {
+    const sid = findSkillIdByModalTitle();
+    const s = skillById.get(sid);
+    if (!s) return;
+
+    const q = modalTechniqueSearch.value.trim().toLowerCase();
+    const filtered = normalizeTechniques(s.techniques).filter(t =>
+      t.name.toLowerCase().includes(q)
+    );
+    renderModalTechniques(filtered);
+  });
+
+  return { openSkillModal, closeSkillModal, isModalOpen };
 }
 
-async function addXp() {
+// ---------- XP add ----------
+async function addXp(dom) {
+  const { skillSelect, techniqueInput, activitySelect, noteInput } = dom;
+
   const sid = skillSelect.value;
   const skill = skillById.get(sid);
   if (!skill) return;
 
-  const technique = techniqueInput.value.trim();
+  const techniqueName = techniqueInput.value.trim();
   const activity = activitySelect.value;
   const note = noteInput.value.trim();
 
@@ -325,7 +358,8 @@ async function addXp() {
     skillId: sid,
     skillName: skill.name,
     activity,
-    technique: technique || null,
+    // keep as string name (do NOT convert skills back to string arrays)
+    technique: techniqueName || null,
     note: note || null,
     xp,
   };
@@ -347,54 +381,89 @@ async function addXp() {
 
   techniqueInput.value = "";
   noteInput.value = "";
-  renderAll();
 }
 
-// ---------- Init ----------
-function refreshSkillsFromRegistry() {
-  skills = Array.isArray(window.SKILL_DEFS) ? window.SKILL_DEFS : [];
-  skillById = new Map(skills.map(s => [s.id, s]));
-}
-
-function wireFolderButton() {
+// ---------- Folder button wiring ----------
+function wireFolderButton(dom, rerender) {
+  const { chooseFolderBtn, folderStatus } = dom;
   if (!chooseFolderBtn) return;
 
   if (!canUseFolderPicker()) {
     chooseFolderBtn.disabled = true;
     chooseFolderBtn.title = "Folder picker requires https:// or http://localhost";
+    setFolderStatus(folderStatus);
     return;
   }
 
   chooseFolderBtn.addEventListener("click", async () => {
     try {
       folderHandle = await window.showDirectoryPicker();
-      setFolderStatus();
+      setFolderStatus(folderStatus);
 
       // Rebuild XP from folder (authoritative if you choose one)
       await rebuildXpFromFolderLog();
-
-      // (Optional) also keep local totals in sync by rebuilding local too
-      // xpLog = loadLocalLog(); rebuildXpFromLocalLog();
-
-      renderAll();
+      rerender();
     } catch {
       // user cancelled
     }
   });
+
+  setFolderStatus(folderStatus);
 }
 
-(function init() {
+// ---------- Init (DOM-ready) ----------
+document.addEventListener("DOMContentLoaded", () => {
+  // ---------- DOM ----------
+  const dom = {
+    chooseFolderBtn: document.getElementById("chooseFolderBtn"),
+    folderStatus: document.getElementById("folderStatus"),
+
+    skillGridPhysics: document.getElementById("skillGridPhysics"),
+    skillGridElite: document.getElementById("skillGridElite"),
+    skillGridMath: document.getElementById("skillGridMath"),
+
+    skillSelect: document.getElementById("skillSelect"),
+    techniqueInput: document.getElementById("techniqueInput"),
+    techniqueList: document.getElementById("techniqueList"),
+    activitySelect: document.getElementById("activitySelect"),
+    noteInput: document.getElementById("noteInput"),
+    addXpBtn: document.getElementById("addXpBtn"),
+
+    // Modal
+    modalBackdrop: document.getElementById("modalBackdrop"),
+    skillModal: document.getElementById("skillModal"),
+    closeModalBtn: document.getElementById("closeModalBtn"),
+    modalTitle: document.getElementById("modalTitle"),
+    modalSubtitle: document.getElementById("modalSubtitle"),
+    modalDescription: document.getElementById("modalDescription"),
+    modalMilestones: document.getElementById("modalMilestones"),
+    modalTechniques: document.getElementById("modalTechniques"),
+    modalTechniqueSearch: document.getElementById("modalTechniqueSearch"),
+  };
+
+  // Load skills AFTER DOM is ready. Skill scripts have already executed because
+  // index.html loads them before app.js.
   refreshSkillsFromRegistry();
+
+  const modal = makeModalController(dom);
+
+  function rerender() {
+    renderAll(dom, modal.openSkillModal);
+    updateTechniqueDatalist(dom);
+  }
 
   // localStorage XP load
   xpLog = loadLocalLog();
   rebuildXpFromLocalLog();
 
-  setFolderStatus();
-  wireFolderButton();
+  // Wire UI
+  wireFolderButton(dom, rerender);
 
-  skillSelect.addEventListener("change", () => updateTechniqueDatalist());
-  addXpBtn.addEventListener("click", () => addXp());
+  dom.skillSelect.addEventListener("change", () => updateTechniqueDatalist(dom));
+  dom.addXpBtn.addEventListener("click", async () => {
+    await addXp(dom);
+    rerender();
+  });
 
-  renderAll();
-})();
+  rerender();
+});
