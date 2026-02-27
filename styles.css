@@ -24,7 +24,7 @@ body {
   color: var(--text);
   padding: 26px;
 
-  /* Less drab background: layered radials */
+  /* Layered radials */
   background:
     radial-gradient(1200px 700px at 12% 10%, rgba(124,92,255,0.18), transparent 60%),
     radial-gradient(1100px 650px at 85% 18%, rgba(56,189,248,0.14), transparent 62%),
@@ -32,7 +32,13 @@ body {
     linear-gradient(180deg, var(--bg0), var(--bg1));
 }
 
-body > * { max-width: 1180px; width: 100%; margin-left:auto; margin-right:auto; }
+/* Center the layout container, but keep left-aligned text */
+body > * {
+  max-width: 1180px;
+  width: 100%;
+  margin-left:auto;
+  margin-right:auto;
+}
 
 h1 { margin: 6px 0 18px; font-size: 34px; }
 h2 { margin-top: 22px; margin-bottom: 10px; }
@@ -148,21 +154,6 @@ input:focus, select:focus {
   background: rgba(0,0,0,0.22);
 }
 
-.skillCard--elite .skillBadge{
-  border-color: rgba(255,255,255,0.22);
-  background: rgba(0,0,0,0.30);
-}
-
-.skillTitleBtn {
-  all: unset;
-  cursor: pointer;
-  display: inline-block;
-  font-size: 18px;
-  font-weight: 800;
-  color: var(--text);
-}
-.skillTitleBtn:hover { text-decoration: underline; }
-
 /* Cosmo special: black body + rainbow strip on right */
 .skillCard--cosmo{
   background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015));
@@ -193,7 +184,6 @@ input:focus, select:focus {
   overflow: hidden;
   margin-top: 10px;
 }
-
 .progressFill {
   height: 100%;
   background: linear-gradient(90deg, var(--skill-accent), rgba(255,255,255,0.25));
@@ -342,4 +332,94 @@ input:focus, select:focus {
   clip: rect(0,0,0,0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ---------- Custom Select (pretty dropdown replaces OS grey) ---------- */
+.nativeSelectHidden{
+  position: absolute !important;
+  left: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.cSelect{
+  position: relative;
+  width: 100%;
+}
+
+.cSelectBtn{
+  width: 100%;
+  text-align: left;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(0,0,0,0.28);
+  color: var(--text);
+  cursor: pointer;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,0.28);
+}
+
+.cSelectBtn:focus{
+  outline: none;
+  border-color: rgba(124,92,255,0.6);
+  box-shadow: 0 0 0 4px rgba(124,92,255,0.18);
+}
+
+.cSelectChevron{
+  opacity: 0.9;
+  font-size: 14px;
+}
+
+.cSelectMenu{
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 10px);
+  z-index: 2000;
+
+  background: rgba(15, 20, 28, 0.98);
+  border: 1px solid rgba(255,255,255,0.14);
+  border-radius: 16px;
+
+  box-shadow: var(--shadow);
+  padding: 8px;
+
+  max-height: 320px;
+  overflow: auto;
+
+  transform-origin: top;
+}
+
+.cSelectOption{
+  padding: 12px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: rgba(233,238,245,0.95);
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.cSelectOption:hover{
+  background: rgba(124,92,255,0.18);
+}
+
+.cSelectOption[aria-selected="true"]{
+  background: rgba(124,92,255,0.30);
+  border: 1px solid rgba(124,92,255,0.35);
+}
+
+.cSelectOptionSub{
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: rgba(168,178,193,0.95);
+  font-weight: 550;
 }
