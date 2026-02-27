@@ -118,7 +118,7 @@ function getSkillAccent(skillId) {
     case "qm": return "#a855f7";                
     case "qft": return "#6366f1";               
     case "gr": return "#2dd4bf";                 
-    case "classical_mechanics": return "##ef4444"; 
+    case "classical_mechanics": return "#ef4444"; 
     case "cosmo": return "#111111";              
     default: return "#7c5cff";
   }
