@@ -585,13 +585,18 @@ async function addXp() {
 
 // ---------- Init wiring ----------
 function setFolderStatus() {
+  const folderPanel = document.getElementById("folderPanel");
   if (!folderStatus) return;
+
   if (folderHandle) {
     folderStatus.textContent = "Folder chosen ✓";
+    if (folderPanel) folderPanel.hidden = true;   // <-- hide after chosen
   } else if (canUseFolderPicker()) {
     folderStatus.textContent = "No folder chosen";
+    if (folderPanel) folderPanel.hidden = false;  // <-- show if not chosen
   } else {
     folderStatus.textContent = "Folder saving unavailable (using local storage)";
+    if (folderPanel) folderPanel.hidden = false;
   }
 }
 
