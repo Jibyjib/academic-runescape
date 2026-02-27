@@ -7,62 +7,65 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <h1>Academic RuneScape</h1>
+  <!-- Centered layout container -->
+  <div class="container">
+    <h1>Academic RuneScape</h1>
 
-  <section class="panel" id="folderPanel">
-    <button id="chooseFolderBtn" type="button">Choose Data Folder</button>
-    <span id="folderStatus" class="muted">No folder chosen</span>
-    <div class="muted small" style="margin-top:8px;">
-      Note: folder saving may be disabled on file://. If so, the app can still run (localStorage fallback in app.js).
-    </div>
-  </section>
-
-  <!-- Move Add XP up here -->
-  <h2>Add XP</h2>
-  <section class="panel">
-    <div class="xpRow">
-      <label class="srOnly" for="skillSelect">Skill</label>
-      <select id="skillSelect"></select>
-
-      <label class="srOnly" for="techniqueInput">Technique</label>
-      <input id="techniqueInput" list="techniqueList" placeholder="Technique (type to search)" />
-      <datalist id="techniqueList"></datalist>
-
-      <label class="srOnly" for="activitySelect">Activity</label>
-      <select id="activitySelect">
-        <option value="Reading">Reading</option>
-        <option value="Derivation">Derivation</option>
-        <option value="Problems">Problems</option>
-        <option value="Chapter">Chapter</option>
-        <option value="Book">Book</option>
-      </select>
-
-      <label class="srOnly" for="noteInput">Note</label>
-      <input id="noteInput" placeholder="Optional note" />
-
-      <button id="addXpBtn" type="button">Add XP</button>
-    </div>
-
-    <div class="suggestRow">
-      <div class="muted small" style="margin-top:10px;">
-        Suggested techniques (based on your current level):
+    <section class="panel" id="folderPanel">
+      <button id="chooseFolderBtn" type="button">Choose Data Folder</button>
+      <span id="folderStatus" class="muted">No folder chosen</span>
+      <div class="muted small" style="margin-top:8px;">
+        Note: folder saving may be disabled on file://. If so, the app can still run (localStorage fallback in app.js).
       </div>
-      <div id="suggestedTechniques" class="chipRow"></div>
-      <div class="muted small" style="margin-top:10px;">
-        Tip: click a skill name to open its “level guide”.
+    </section>
+
+    <!-- Move Add XP up here -->
+    <h2>Add XP</h2>
+    <section class="panel">
+      <div class="xpRow">
+        <label class="srOnly" for="skillSelect">Skill</label>
+        <select id="skillSelect"></select>
+
+        <label class="srOnly" for="techniqueInput">Technique</label>
+        <input id="techniqueInput" list="techniqueList" placeholder="Technique (type to search)" />
+        <datalist id="techniqueList"></datalist>
+
+        <label class="srOnly" for="activitySelect">Activity</label>
+        <select id="activitySelect">
+          <option value="Reading">Reading</option>
+          <option value="Derivation">Derivation</option>
+          <option value="Problems">Problems</option>
+          <option value="Chapter">Chapter</option>
+          <option value="Book">Book</option>
+        </select>
+
+        <label class="srOnly" for="noteInput">Note</label>
+        <input id="noteInput" placeholder="Optional note" />
+
+        <button id="addXpBtn" type="button">Add XP</button>
       </div>
-    </div>
-  </section>
 
-  <h2 class="sectionTitle">Physics</h2>
-  <div id="skillGridPhysics" class="skillGrid"></div>
+      <div class="suggestRow">
+        <div class="muted small" style="margin-top:10px;">
+          Suggested techniques (based on your current level):
+        </div>
+        <div id="suggestedTechniques" class="chipRow"></div>
+        <div class="muted small" style="margin-top:10px;">
+          Tip: click a skill name to open its “level guide”.
+        </div>
+      </div>
+    </section>
 
-  <h2 class="sectionTitle">Elite Skills</h2>
-  <div id="skillGridElite" class="skillGrid"></div>
+    <h2 class="sectionTitle">Physics</h2>
+    <div id="skillGridPhysics" class="skillGrid"></div>
 
-  <h2 class="sectionTitle">Math</h2>
-  <div id="skillGridMath" class="skillGrid"></div>
-  <p class="muted">No math skills yet — but the slot is ready.</p>
+    <h2 class="sectionTitle">Elite Skills</h2>
+    <div id="skillGridElite" class="skillGrid"></div>
+
+    <h2 class="sectionTitle">Math</h2>
+    <div id="skillGridMath" class="skillGrid"></div>
+    <p class="muted">No math skills yet — but the slot is ready.</p>
+  </div>
 
   <!-- =========================
        SKILL MODAL (popup)
