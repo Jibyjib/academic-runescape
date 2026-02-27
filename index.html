@@ -1,75 +1,101 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Academic RuneScape</title>
-<link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Academic RuneScape</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <h1>Academic RuneScape</h1>
 
-<h1>Academic RuneScape</h1>
+  <section class="panel">
+    <button id="chooseFolderBtn">Choose Data Folder</button>
+    <span id="folderStatus" class="muted">No folder chosen</span>
+  </section>
 
-<div id="folderSelect">
-  <button id="chooseFolder">Choose Data Folder</button>
-</div>
+  <!-- =========================
+       PHYSICS SKILLS (normal)
+       ========================= -->
+  <h2 class="sectionTitle">Physics</h2>
+  <div id="skillGridPhysics" class="skillGrid"></div>
 
-<div id="app" style="display:none;">
-  <div id="skillGrid"></div>
+  <!-- =========================
+       ELITE SKILLS
+       ========================= -->
+  <h2 class="sectionTitle">Elite Skills</h2>
+  <div id="skillGridElite" class="skillGrid"></div>
 
+  <!-- =========================
+       MATH SKILLS (soon)
+       ========================= -->
+  <h2 class="sectionTitle">Math</h2>
+  <div id="skillGridMath" class="skillGrid"></div>
+  <p class="muted">No math skills yet — but the slot is ready.</p>
+
+  <!-- =========================
+       ADD XP
+       ========================= -->
   <h2>Add XP</h2>
-  <div id="xpForm">
-    <select id="skillSelect"></select>
+  <section class="panel">
+    <div class="xpRow">
+      <label class="srOnly" for="skillSelect">Skill</label>
+      <select id="skillSelect"></select>
 
-    <input id="techniqueInput" list="techniqueList" placeholder="Technique (type to search)">
-    <datalist id="techniqueList"></datalist>
+      <label class="srOnly" for="techniqueInput">Technique</label>
+      <input id="techniqueInput" list="techniqueList" placeholder="Technique (type to search)" />
+      <datalist id="techniqueList"></datalist>
 
-    <select id="activityType">
-      <option value="reading">Reading</option>
-      <option value="derivation">Derivation</option>
-      <option value="problems">Problems</option>
-      <option value="chapter">Chapter</option>
-      <option value="book">Book</option>
-    </select>
+      <label class="srOnly" for="activitySelect">Activity</label>
+      <select id="activitySelect">
+        <option value="Reading">Reading</option>
+        <option value="Derivation">Derivation</option>
+        <option value="Problems">Problems</option>
+        <option value="Chapter">Chapter</option>
+        <option value="Book">Book</option>
+      </select>
 
-    <input type="text" id="note" placeholder="Optional note">
-    <button id="addXp">Add XP</button>
+      <label class="srOnly" for="noteInput">Note</label>
+      <input id="noteInput" placeholder="Optional note" />
+
+      <button id="addXpBtn">Add XP</button>
+    </div>
+
+    <div class="muted small">
+      Tip: click a skill name to open its “level guide”.
+    </div>
+  </section>
+
+  <!-- =========================
+       SKILL MODAL (popup)
+       ========================= -->
+  <div id="modalBackdrop" class="modalBackdrop" hidden></div>
+
+  <div id="skillModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
+    <div class="modalHeader">
+      <div>
+        <div id="modalTitle" class="modalTitle">Skill</div>
+        <div id="modalSubtitle" class="muted small"></div>
+      </div>
+      <button id="closeModalBtn" class="iconBtn" aria-label="Close">✕</button>
+    </div>
+
+    <div class="modalBody">
+      <p id="modalDescription" class="modalDescription"></p>
+
+      <div class="modalSection">
+        <div class="modalSectionTitle">Milestones (level guide vibe)</div>
+        <ul id="modalMilestones" class="list"></ul>
+      </div>
+
+      <div class="modalSection">
+        <div class="modalSectionTitle">Techniques</div>
+        <input id="modalTechniqueSearch" class="modalSearch" placeholder="Filter techniques..." />
+        <ul id="modalTechniques" class="list"></ul>
+      </div>
+    </div>
   </div>
-</div>
 
-<!-- ===================================================== -->
-<!-- ================== SKILL DEFINITIONS ================= -->
-<!-- ===================================================== -->
-<!--  All skills are loaded below.                        -->
-<!--  Physics skills and Math skills are separated.       -->
-<!--  To edit skill trees, modify files in /skills/.     -->
-<!-- ===================================================== -->
-
-<!-- ---------- PHYSICS SKILLS ---------- -->
-
-<script src="skills/skills_manifest.js"></script>
-
-<script src="skills/cm.js"></script>
-<script src="skills/em.js"></script>
-<script src="skills/qm.js"></script>
-<script src="skills/gr.js"></script>
-<script src="skills/qft.js"></script>
-<script src="skills/cosmo.js"></script>
-
-<!-- ---------- MATH SKILLS (future expansion) ---------- -->
-<!--
-<script src="skills/analysis.js"></script>
-<script src="skills/algebra.js"></script>
-<script src="skills/geometry.js"></script>
-<script src="skills/topology.js"></script>
-<script src="skills/functional_analysis.js"></script>
-<script src="skills/probability.js"></script>
--->
-
-<!-- ===================================================== -->
-<!-- ===================== CORE APP ====================== -->
-<!-- ===================================================== -->
-
-<script src="app.js"></script>
-
+  <script type="module" src="app.js"></script>
 </body>
 </html>
