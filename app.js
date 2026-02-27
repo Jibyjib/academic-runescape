@@ -162,36 +162,51 @@
     }
   }
 
-  function renderAll() {
-    if (!skillGridPhysics) return;
+function renderAll() {
+  if (!skillGridPhysics) return;
 
-    skillGridPhysics.innerHTML = "";
-    skillGridElite.innerHTML = "";
-    skillGridMath.innerHTML = "";
+  skillGridPhysics.innerHTML = "";
+  skillGridElite.innerHTML = "";
+  skillGridMath.innerHTML = "";
 
-    const physics = skills.filter(s => s.category === "physics" && !s.isElite);
-    const elite = skills.filter(s => s.category === "physics" && s.isElite);
-    const math = skills.filter(s => s.category === "math");
+  // ------------------------------------------------------------
+  // Classification WITHOUT relying on category/isElite fields.
+  // Elite proxy: cap >= 120.
+  // Math proxy: explicit id set (empty for now since you said no math yet).
+  // ------------------------------------------------------------
+  const MATH_IDS = new Set([
+    // add later when you create math skills, e.g.:
+    // "real_analysis", "complex_analysis", "linear_algebra", "topology"
+  ]);
 
-    for (const s of physics) skillGridPhysics.appendChild(renderSkillCard(s));
-    for (const s of elite) skillGridElite.appendChild(renderSkillCard(s));
-    for (const s of math) skillGridMath.appendChild(renderSkillCard(s));
+  const isMath = (s) => MATH_IDS.has(s.id);
+  const isElite = (s) => Number(s.cap ?? 99) >= 120;
 
-    // Skill dropdown
-    skillSelect.innerHTML = "";
-    for (const s of skills) {
-      const opt = document.createElement("option");
-      opt.value = s.id;
-      opt.textContent = s.isElite ? `${s.name} (Elite)` : s.name;
-      skillSelect.appendChild(opt);
-    }
+  const physics = skills.filter(s => !isMath(s) && !isElite(s));
+  const elite   = skills.filter(s => !isMath(s) &&  isElite(s));
+  const math    = skills.filter(s =>  isMath(s));
 
-    // keep selection stable if possible
-    if (!skillSelect.value && skills.length) skillSelect.value = skills[0].id;
+  for (const s of physics) skillGridPhysics.appendChild(renderSkillCard(s));
+  for (const s of elite)   skillGridElite.appendChild(renderSkillCard(s));
+  for (const s of math)    skillGridMath.appendChild(renderSkillCard(s));
 
-    updateTechniqueUI();
+  // Skill dropdown
+  skillSelect.innerHTML = "";
+  for (const s of skills) {
+    const opt = document.createElement("option");
+    opt.value = s.id;
+
+    const eliteLabel = isElite(s) ? " (Elite)" : "";
+    opt.textContent = `${s.name}${eliteLabel}`;
+
+    skillSelect.appendChild(opt);
   }
 
+  // keep selection stable if possible
+  if (!skillSelect.value && skills.length) skillSelect.value = skills[0].id;
+
+  updateTechniqueUI();
+}
   function renderSkillCard(skill) {
     const xp = xpBySkill.get(skill.id) ?? 0;
     const { lvl, frac } = progressToNextLevel(xp);
