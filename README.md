@@ -43,9 +43,9 @@ Elite skills represent synthesis.
 - Represent cross-disciplinary mastery
 
 ---
-
 ## 🧱 Project Structure
 
+```
 academic-runescape/
 ├── index.html
 ├── app.js
@@ -55,8 +55,10 @@ academic-runescape/
 │   ├── physics.js
 │   └── ...
 └── README.md
+```
 
 Each skill lives in its own file for modularity and clean scaling.
+
 
 ---
 
