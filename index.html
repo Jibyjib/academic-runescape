@@ -80,6 +80,11 @@
       </div>
 
       <div class="modalSection">
+        <div class="modalSectionTitle">Suggested next</div>
+        <ul id="modalSuggestedTechniques" class="list"></ul>
+      </div>
+
+      <div class="modalSection">
         <div class="modalSectionTitle">Techniques</div>
         <input id="modalTechniqueSearch" class="modalSearch" placeholder="Filter techniques..." />
         <ul id="modalTechniques" class="list"></ul>
@@ -90,10 +95,10 @@
   <!-- =========================
        NO-SERVER SKILL LOADING
        Each skills/*.js should push into:
-       window.ACAD_RS_SKILLS (array of skill objects)
+       window.ACAD_RS_SKILLS
        ========================= -->
   <script>
-    window.ACAD_RS_SKILLS = [];
+    window.ACAD_RS_SKILLS = window.ACAD_RS_SKILLS || [];
   </script>
 
   <!-- List your skills here (one per file) -->
