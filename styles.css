@@ -32,13 +32,22 @@ body {
     linear-gradient(180deg, var(--bg0), var(--bg1));
 }
 
-/* Center the layout container, but keep left-aligned text */
+/* ✅ Single centered layout container */
+.container{
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* (Removed) body > * centering rule */
+/*
 body > * {
   max-width: 1180px;
   width: 100%;
   margin-left:auto;
   margin-right:auto;
 }
+*/
 
 h1 { margin: 6px 0 18px; font-size: 34px; }
 h2 { margin-top: 22px; margin-bottom: 10px; }
