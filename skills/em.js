@@ -4,47 +4,84 @@ window.ACAD_RS_SKILLS.push({
   cap: 99,
   techniques: [
     // ----------------------------
-    // Griffiths foundations (L1–35)
+    // Foundations (L1–35)
     // ----------------------------
-    { level: 1,  name: "Coulomb’s law / superposition / basic field intuition" },
-    { level: 5,  name: "Electric field & potential (line/surface integrals, gauge freedom basics)" },
-    { level: 10, name: "Gauss’s law + symmetry methods" },
-    { level: 15, name: "Conductors + boundary conditions (electrostatics)" },
-    { level: 20, name: "Laplace/Poisson BVPs (separation, images)" },
-    { level: 25, name: "Multipole expansion (electrostatics working fluency)" },
-    { level: 30, name: "Magnetostatics (Biot–Savart, A, Ampère)" },
-    { level: 35, name: "Maxwell eqs: integral ↔ differential + continuity equation" },
+    { level: 1,  name: "Electrostatics modeling: Coulomb superposition and field construction from sources" },
+    { level: 5,  name: "Potential methods: line/surface integrals, gauge shifts, and energy functionals" },
+    { level: 10, name: "Gauss law techniques: symmetry reduction and flux-based field determination" },
+    { level: 15, name: "Electrostatic boundaries: conductors, uniqueness logic, and interface conditions" },
+    { level: 20, name: "Laplace/Poisson BVPs: separation of variables and method of images constructions" },
+    { level: 25, name: "Electrostatic multipoles: moment tensors and far-field systematics" },
+    { level: 30, name: "Magnetostatics: Biot–Savart, vector potential, Ampère law, and magnetostatic boundaries" },
+    { level: 35, name: "Maxwell equations: integral–differential forms and charge conservation closure" },
 
     // ----------------------------
-    // Completing Griffiths mastery (~60)
+    // Completing core mastery (≤ 60)
     // ----------------------------
-    { level: 40, name: "EM waves in vacuum: plane waves, polarization, energy/momentum flow" },
-    { level: 45, name: "Waves at interfaces: Fresnel coefficients + boundary matching (working)" },
-    { level: 50, name: "Poynting theorem + Maxwell stress tensor (operational)" },
-    { level: 55, name: "Macroscopic EM: D/H, P/M, bound charge/current" },
-    { level: 60, name: "Retarded potentials + Liénard–Wiechert fields (derivation-level)" },
+    { level: 38, name: "Energy and forces: field energy density, pressure, and virtual-work computation" },
+    { level: 42, name: "Electromagnetic waves: plane-wave solutions, polarization, and impedance matching" },
+    { level: 46, name: "Waves at interfaces: Fresnel coefficients and boundary matching in simple geometries" },
+    { level: 50, name: "Poynting theorem: energy–momentum flow and Maxwell stress tensor force extraction" },
+    { level: 55, name: "Macroscopic electromagnetism: D/H fields, P/M, and bound charge/current bookkeeping" },
+    { level: 60, name: "Retarded potentials: Green-function construction and Liénard–Wiechert fields" },
 
     // ----------------------------
-    // First-year grad fluency (Jackson + Landau–Lifshitz) (~60–80)
+    // First-year grad fluency lanes (restart near ~60)
     // ----------------------------
-    { level: 64, name: "Gauge choices (Lorenz/Coulomb) + residual gauge; potentials vs fields" },
-    { level: 66, name: "Green’s functions for Poisson/Helmholtz/wave operator (operational, gauge-aware)" },
-    { level: 68, name: "Vector spherical harmonics + EM multipoles (setup-level)" },
-    { level: 70, name: "Radiation multipoles: angular patterns + power systematics (working)" },
-    { level: 72, name: "Waveguides: TE/TM modes + dispersion relations (working)" },
-    { level: 74, name: "Cavities/resonators: mode normalization + stored energy/Q (working)" },
-    { level: 76, name: "Covariant Maxwell: F_{μν}, dual, invariants; 4-potential and gauge" },
-    { level: 78, name: "Action principle for EM + covariant stress–energy (variation-level)" },
-    { level: 80, name: "Radiation from accelerated charges: Larmor/Liénard + angular distribution (working)" },
+
+    // Lane A: Gauge + field-theoretic structure
+    { level: 60, name: "Gauge structure: Lorenz/Coulomb gauges, residual gauge freedom, constraint propagation" },
+    { level: 66, name: "Maxwell action: gauge symmetry, boundary terms, and stress–energy derivation" },
+    { level: 72, name: "Noether analysis: conserved charges and angular momentum of the EM field" },
+    { level: 78, name: "Differential-forms Maxwell: bundle viewpoint, potentials, and cohomological flux" },
+
+    // Lane B: Green functions + radiation
+    { level: 60, name: "Green functions for Poisson/Helmholtz/wave operators: source reconstruction" },
+    { level: 68, name: "Causal propagators: retarded/advanced solutions and support in spacetime" },
+    { level: 74, name: "Multipole radiation: Eℓ/Mℓ decomposition and angular power systematics" },
+    { level: 80, name: "Far-zone asymptotics: stationary-phase evaluation of radiation integrals" },
+
+    // Lane C: Media + response theory
+    { level: 60, name: "Linear response in media: susceptibility tensors and causality constraints" },
+    { level: 68, name: "Kramers–Kronig relations: analyticity of ε(ω), μ(ω), and refractive index" },
+    { level: 74, name: "Anisotropic and magneto-electric media: tensor constitutive laws" },
+    { level: 80, name: "Plasma electrodynamics: dielectric tensor and dispersion surfaces" },
+
+    // Lane D: Spectral + boundary structure
+    { level: 60, name: "Mode expansions: orthogonality and completeness in bounded domains" },
+    { level: 68, name: "Waveguides and cavities: spectral problems and dispersion relations" },
+    { level: 74, name: "Scattering matrices: boundary matching and unitarity constraints" },
+    { level: 80, name: "Integral-equation formulations: boundary layer potentials and well-posedness" },
+
+    // Lane E: Self-fields + consistency
+    { level: 60, name: "Radiation from accelerated charges: power and angular distributions" },
+    { level: 70, name: "Bound vs radiative fields: near-zone/far-zone decomposition" },
+    { level: 76, name: "Radiation reaction models: consistency and mass renormalization logic" },
 
     // ----------------------------
-    // Post-first-year depth (~80–97)
+    // Post-first-year depth (restart near ~80; parallel lanes)
     // ----------------------------
-    { level: 83, name: "Scattering toolkit: partial waves + Born approximation (EM-relevant)" },
-    { level: 86, name: "Dispersive/absorbing media: response functions + Kramers–Kronig literacy" },
-    { level: 89, name: "Constitutive relations covariantly: frame-dependence + material tensors (working)" },
-    { level: 92, name: "Differential-forms EM: dF=0, d⋆G=J; geometric organization of Maxwell" },
-    { level: 95, name: "Causal Green functions: retarded/advanced structure + support intuition (working)" },
-    { level: 97, name: "Radiation reaction & self-force (statement→working understanding)" }
+
+    // Lane 1: Geometric/topological structure
+    { level: 80, name: "Flux quantization: gauge potentials on nontrivial bundles and transition functions" },
+    { level: 86, name: "Duality rotations: electric–magnetic symmetry and invariant structures" },
+    { level: 92, name: "Cohomological classification: global charges and de Rham classes in EM" },
+
+    // Lane 2: Advanced scattering + spectral theory
+    { level: 80, name: "Partial-wave scattering: phase shifts and optical theorem constraints" },
+    { level: 86, name: "Resonances and quasi-normal modes: complex-frequency poles of response" },
+    { level: 94, name: "Analytic continuation in frequency: dispersion relations for scattering amplitudes" },
+
+    // Lane 3: Structured media + effective descriptions
+    { level: 80, name: "Homogenization limits: effective-medium parameters from microstructure" },
+    { level: 88, name: "Nonlocal constitutive laws: spatial dispersion and k-dependent response" },
+    { level: 96, name: "Effective action viewpoint: integrating out matter to obtain macroscopic response" },
+
+    // Lane 4: Asymptotic + multiscale methods
+    { level: 80, name: "Matched asymptotics: near-zone multipoles to far-zone radiation matching" },
+    { level: 90, name: "High-frequency limits: geometric optics with polarization transport corrections" },
+    { level: 98, name: "Multiscale wave propagation: envelope equations and slow-modulation structure" }
+
+    // Note: no entry at level 99 (cap is 99)
   ]
 });
