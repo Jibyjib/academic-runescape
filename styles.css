@@ -1,3 +1,8 @@
+/* Ensure hidden attribute always wins */
+[hidden] { 
+  display: none !important; 
+}
+
 body {
   font-family: Arial, sans-serif;
   background: #111;
@@ -5,9 +10,14 @@ body {
   padding: 20px;
 }
 
-button { padding: 8px 12px; margin: 5px 0; }
+button { 
+  padding: 8px 12px; 
+  margin: 5px 0; 
+}
 
-.sectionTitle { margin-top: 26px; }
+.sectionTitle { 
+  margin-top: 26px; 
+}
 
 .panel {
   background: #171717;
@@ -17,8 +27,13 @@ button { padding: 8px 12px; margin: 5px 0; }
   margin: 12px 0 18px;
 }
 
-.muted { color: #a8a8a8; }
-.small { font-size: 12px; }
+.muted { 
+  color: #a8a8a8; 
+}
+
+.small { 
+  font-size: 12px; 
+}
 
 .skillGrid {
   display: grid;
@@ -42,7 +57,10 @@ button { padding: 8px 12px; margin: 5px 0; }
   font-weight: 700;
   color: #fff;
 }
-.skillTitleBtn:hover { text-decoration: underline; }
+
+.skillTitleBtn:hover { 
+  text-decoration: underline; 
+}
 
 .progressBar {
   height: 10px;
@@ -51,7 +69,11 @@ button { padding: 8px 12px; margin: 5px 0; }
   overflow: hidden;
   margin-top: 8px;
 }
-.progressFill { height: 100%; background: #4caf50; }
+
+.progressFill { 
+  height: 100%; 
+  background: #4caf50; 
+}
 
 .xpRow {
   display: grid;
@@ -68,6 +90,7 @@ input, select {
   padding: 8px 10px;
 }
 
+/* Modal backdrop */
 .modalBackdrop {
   position: fixed;
   inset: 0;
@@ -75,6 +98,7 @@ input, select {
   z-index: 999;
 }
 
+/* Modal container */
 .modal {
   position: fixed;
   top: 50%;
@@ -99,16 +123,37 @@ input, select {
   border-bottom: 1px solid #262626;
 }
 
-.modalTitle { font-size: 20px; font-weight: 800; }
-.modalBody { padding: 14px; overflow: auto; }
+.modalTitle { 
+  font-size: 20px; 
+  font-weight: 800; 
+}
 
-.modalDescription { margin-top: 0; }
+.modalBody { 
+  padding: 14px; 
+  overflow: auto; 
+}
 
-.modalSection { margin-top: 16px; }
-.modalSectionTitle { font-weight: 700; margin-bottom: 8px; }
+.modalDescription { 
+  margin-top: 0; 
+}
 
-.list { margin: 0; padding-left: 18px; }
-.list li { margin: 6px 0; }
+.modalSection { 
+  margin-top: 16px; 
+}
+
+.modalSectionTitle { 
+  font-weight: 700; 
+  margin-bottom: 8px; 
+}
+
+.list { 
+  margin: 0; 
+  padding-left: 18px; 
+}
+
+.list li { 
+  margin: 6px 0; 
+}
 
 .modalSearch {
   width: 100%;
@@ -122,13 +167,19 @@ input, select {
   padding: 6px 10px;
   color: #eee;
   cursor: pointer;
+  line-height: 1;
 }
-.iconBtn:hover { background: #202020; }
+
+.iconBtn:hover { 
+  background: #202020; 
+}
 
 .srOnly {
   position: absolute;
-  width: 1px; height: 1px;
-  padding: 0; margin: -1px;
+  width: 1px; 
+  height: 1px;
+  padding: 0; 
+  margin: -1px;
   overflow: hidden;
   clip: rect(0,0,0,0);
   white-space: nowrap;
