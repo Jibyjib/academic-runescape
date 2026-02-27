@@ -13,7 +13,7 @@
     <button id="chooseFolderBtn" type="button">Choose Data Folder</button>
     <span id="folderStatus" class="muted">No folder chosen</span>
     <div class="muted small" style="margin-top:8px;">
-      Note: folder saving may be disabled on file://. If so, the app can still run (we’ll add localStorage fallback in app.js).
+      Note: folder saving may be disabled on file://. If so, the app can still run (localStorage fallback in app.js).
     </div>
   </section>
 
@@ -89,11 +89,11 @@
 
   <!-- =========================
        NO-SERVER SKILL LOADING
-       Each skills/*.js will do:
-       window.SKILL_DEFS.push({...})
+       Each skills/*.js should push into:
+       window.ACAD_RS_SKILLS (array of skill objects)
        ========================= -->
   <script>
-    window.SKILL_DEFS = [];
+    window.ACAD_RS_SKILLS = [];
   </script>
 
   <!-- List your skills here (one per file) -->
