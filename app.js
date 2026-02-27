@@ -326,7 +326,7 @@
 
     // cap to avoid huge lists
     merged.sort((a, b) => (a.level ?? 0) - (b.level ?? 0));
-    const capped = merged.slice(0, 40);
+    const capped = merged.slice(0, 5);
 
     for (const t of capped) {
       const opt = document.createElement("option");
