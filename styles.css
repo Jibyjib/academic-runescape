@@ -6,16 +6,15 @@
   --bg0:#0b0d10;
   --bg1:#0f1319;
   --panel:#12161d;
-  --panel2:#141a22;
-  --card:#141a22;
+  --card:#151b24;
   --border:rgba(255,255,255,0.10);
-  --border2:rgba(255,255,255,0.14);
+  --border2:rgba(255,255,255,0.16);
   --text:#e9eef5;
   --muted:#a8b2c1;
-  --accent:#7c5cff;     /* purple accent */
-  --accent2:#38bdf8;    /* cyan accent */
-  --shadow: 0 18px 60px rgba(0,0,0,0.55);
-  --shadow2: 0 10px 30px rgba(0,0,0,0.40);
+  --accent:#7c5cff;
+  --accent2:#38bdf8;
+  --shadow: 0 20px 60px rgba(0,0,0,0.6);
+  --shadow2: 0 10px 30px rgba(0,0,0,0.4);
   --radius: 14px;
 }
 
@@ -24,23 +23,15 @@
 
 body {
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background:
-    radial-gradient(1000px 700px at 15% 10%, rgba(124,92,255,0.18), transparent 55%),
-    radial-gradient(900px 600px at 85% 15%, rgba(56,189,248,0.12), transparent 55%),
-    radial-gradient(1100px 800px at 40% 90%, rgba(74,222,128,0.08), transparent 60%),
-    linear-gradient(180deg, var(--bg0), var(--bg1));
+  background: linear-gradient(180deg, var(--bg0), var(--bg1));
   color: var(--text);
   padding: 26px;
 }
 
-/* Page max width makes it feel more “app-like” */
-body > * { max-width: 1180px; }
-body { display:flex; flex-direction:column; align-items:center; }
-body > * { width: 100%; }
+body > * { max-width: 1180px; width: 100%; margin-left:auto; margin-right:auto; }
 
 h1 {
   margin: 6px 0 18px;
-  letter-spacing: 0.2px;
   font-size: 34px;
 }
 
@@ -48,7 +39,6 @@ h1 {
   margin-top: 28px;
   margin-bottom: 10px;
   font-size: 24px;
-  letter-spacing: 0.2px;
 }
 
 .muted { color: var(--muted); }
@@ -60,11 +50,11 @@ button {
   margin: 5px 0;
   border-radius: 12px;
   border: 1px solid var(--border);
-  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  background: #1b2230;
   color: var(--text);
   cursor: pointer;
   box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease;
+  transition: transform 120ms ease, border-color 120ms ease;
 }
 
 button:hover {
@@ -75,7 +65,7 @@ button:hover {
 button:active { transform: translateY(0px); }
 
 input, select {
-  background: rgba(12,16,22,0.75);
+  background: #0f141c;
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -84,29 +74,25 @@ input, select {
 }
 
 input:focus, select:focus {
-  border-color: rgba(124,92,255,0.55);
-  box-shadow: 0 0 0 4px rgba(124,92,255,0.18);
+  border-color: rgba(124,92,255,0.6);
+  box-shadow: 0 0 0 4px rgba(124,92,255,0.2);
 }
 
 /* ---------- Panels ---------- */
 .panel {
-  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 14px;
+  padding: 16px;
   margin: 14px 0 18px;
   box-shadow: var(--shadow2);
-  backdrop-filter: blur(6px);
 }
-
-.panel .small { line-height: 1.35; }
 
 /* ---------- Skill grid/cards ---------- */
 .skillGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
-  margin-bottom: 6px;
 }
 
 @media (max-width: 980px) {
@@ -118,20 +104,17 @@ input:focus, select:focus {
 }
 
 .skillCard {
-  background:
-    radial-gradient(600px 260px at 10% 0%, rgba(124,92,255,0.12), transparent 55%),
-    linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02));
-  padding: 16px 16px 14px;
+  background: var(--card);
+  padding: 16px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
-  box-shadow: 0 10px 22px rgba(0,0,0,0.35);
-  transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+  transition: transform 120ms ease, border-color 120ms ease;
 }
 
 .skillCard:hover {
   transform: translateY(-2px);
-  border-color: rgba(124,92,255,0.28);
-  box-shadow: 0 14px 34px rgba(0,0,0,0.45);
+  border-color: rgba(124,92,255,0.35);
 }
 
 .skillTitleBtn {
@@ -139,19 +122,18 @@ input:focus, select:focus {
   cursor: pointer;
   display: inline-block;
   font-size: 18px;
-  font-weight: 780;
+  font-weight: 700;
   color: var(--text);
-  line-height: 1.15;
 }
+
 .skillTitleBtn:hover { text-decoration: underline; }
 
 .progressBar {
   height: 10px;
-  background: rgba(255,255,255,0.08);
+  background: #222a36;
   border-radius: 999px;
   overflow: hidden;
   margin-top: 10px;
-  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .progressFill {
@@ -170,7 +152,6 @@ input:focus, select:focus {
 @media (max-width: 920px) {
   .xpRow {
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
   }
   .xpRow button { grid-column: span 2; }
 }
@@ -179,12 +160,11 @@ input:focus, select:focus {
 .modalBackdrop {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.62);
-  backdrop-filter: blur(3px);
+  background: rgba(0,0,0,0.75); /* solid dark backdrop */
   z-index: 999;
 }
 
-/* Bigger, less claustrophobic modal */
+/* Fully opaque modal */
 .modal {
   position: fixed;
   top: 50%;
@@ -192,11 +172,8 @@ input:focus, select:focus {
   width: min(980px, calc(100vw - 36px));
   max-height: min(86vh, 860px);
   transform: translate(-50%, -50%);
-  background:
-    radial-gradient(900px 400px at 20% 0%, rgba(56,189,248,0.10), transparent 55%),
-    radial-gradient(900px 500px at 80% 0%, rgba(124,92,255,0.13), transparent 55%),
-    linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-  border: 1px solid rgba(255,255,255,0.12);
+  background: #11151c; /* solid, no translucency */
+  border: 1px solid var(--border2);
   border-radius: 18px;
   z-index: 1000;
   display: flex;
@@ -204,40 +181,35 @@ input:focus, select:focus {
   box-shadow: var(--shadow);
 }
 
-/* Sticky header so close button stays visible while scrolling */
+/* Sticky header */
 .modalHeader {
   position: sticky;
   top: 0;
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  padding: 18px 18px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.10);
-  background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.10));
-  backdrop-filter: blur(8px);
+  padding: 18px;
+  border-bottom: 1px solid var(--border);
+  background: #0f141c; /* fully opaque */
   border-top-left-radius: 18px;
   border-top-right-radius: 18px;
 }
 
-.modalTitle { font-size: 22px; font-weight: 820; letter-spacing: 0.2px; }
-.modalBody { padding: 18px; overflow: auto; }
+.modalTitle { font-size: 22px; font-weight: 800; }
+.modalBody { padding: 20px; overflow: auto; }
 
 .modalDescription {
   margin-top: 0;
-  line-height: 1.55;
-  color: rgba(233,238,245,0.92);
+  line-height: 1.6;
 }
 
-.modalSection { margin-top: 18px; }
+.modalSection { margin-top: 20px; }
 .modalSectionTitle {
-  font-weight: 800;
+  font-weight: 700;
   margin-bottom: 10px;
-  letter-spacing: 0.2px;
 }
 
-/* Less bullet density + better readability */
-.list { margin: 0; padding-left: 14px; }
-.list li { margin: 8px 0; line-height: 1.45; }
+.list { margin: 0; padding-left: 16px; }
+.list li { margin: 8px 0; line-height: 1.5; }
 
 .modalSearch {
   width: 100%;
@@ -249,6 +221,7 @@ input:focus, select:focus {
   column-count: 2;
   column-gap: 26px;
 }
+
 #modalTechniques.list li {
   break-inside: avoid;
 }
@@ -258,18 +231,17 @@ input:focus, select:focus {
 }
 
 .iconBtn {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.14);
+  background: #1b2230;
+  border: 1px solid var(--border2);
   border-radius: 12px;
-  padding: 8px 11px;
+  padding: 8px 12px;
   color: var(--text);
   cursor: pointer;
-  line-height: 1;
-  box-shadow: 0 8px 18px rgba(0,0,0,0.35);
 }
-.iconBtn:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.22); }
 
-/* ---------- Accessibility helper ---------- */
+.iconBtn:hover { background: #232c3c; }
+
+/* Accessibility */
 .srOnly {
   position: absolute;
   width: 1px; height: 1px;
