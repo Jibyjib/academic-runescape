@@ -113,13 +113,13 @@ function normalizeSkill(raw) {
 function getSkillAccent(skillId) {
   // matches your mental color notes
   switch (skillId) {
-    case "em": return "#22c55e";                 // green
-    case "thermo_statmech": return "#ef4444";    // red
-    case "qm": return "#a855f7";                 // purple-ish
-    case "qft": return "#6366f1";                // indigo-ish
-    case "gr": return "#2dd4bf";                 // teal-ish (Carroll-ish vibe)
-    case "classical_mechanics": return "#f59e0b"; // Taylor-ish orange/gold
-    case "cosmo": return "#111111";              // mostly black, plus rainbow strip via CSS class
+    case "em": return "#22c55e";                 
+    case "thermo_statmech": return "#ef4444";   
+    case "qm": return "#a855f7";                
+    case "qft": return "#6366f1";               
+    case "gr": return "#2dd4bf";                 
+    case "classical_mechanics": return "##ef4444"; 
+    case "cosmo": return "#111111";              
     default: return "#7c5cff";
   }
 }
