@@ -54,6 +54,29 @@ function normalizeTechniques(raw) {
   return cleaned;
 }
 
+// Suggest up to N techniques at/above current level; fallback to last N
+function getSuggestedTechniques(techniquesRaw, currentLevel, maxCount = 3) {
+  const sorted = normalizeTechniques(techniquesRaw);
+  if (sorted.length === 0) return [];
+
+  let nextUp = sorted.filter(t => t.level >= currentLevel);
+  if (nextUp.length === 0) nextUp = sorted.slice(-maxCount);
+
+  return nextUp.slice(0, maxCount);
+}
+
+// Add defaults so skills don't disappear if fields are omitted
+function withDefaults(s) {
+  return {
+    category: s.category ?? "physics",
+    isElite: s.isElite ?? (s.cap === 120),
+    description: s.description ?? "",
+    milestones: Array.isArray(s.milestones) ? s.milestones : [],
+    techniques: Array.isArray(s.techniques) ? s.techniques : [],
+    ...s,
+  };
+}
+
 // ---------- Folder (optional) ----------
 function canUseFolderPicker() {
   return !!(window.isSecureContext && window.showDirectoryPicker);
@@ -113,18 +136,11 @@ function saveLocalLog(log) {
   }
 }
 
-function withDefaults(s) {
-  return {
-    category: s.category ?? "physics",   // default to physics
-    isElite: s.isElite ?? (s.cap === 120),
-    description: s.description ?? "",
-    milestones: s.milestones ?? [],
-    techniques: s.techniques ?? [],
-    ...s
-  };
-}
-
+// ---------- Skills (loaded from window.ACAD_RS_SKILLS) ----------
 function refreshSkillsFromRegistry() {
+  // Required pattern:
+  //   let skills = window.ACAD_RS_SKILLS || [];
+  //   let skillById = new Map(skills.map(s => [s.id, s]));
   const raw = window.ACAD_RS_SKILLS || [];
   skills = raw.map(withDefaults);
   skillById = new Map(skills.map(s => [s.id, s]));
@@ -236,8 +252,7 @@ function updateTechniqueDatalist(dom) {
   const techniques = normalizeTechniques(s.techniques);
   for (const t of techniques) {
     const opt = document.createElement("option");
-    // Required: show technique.name in dropdown/datalist
-    opt.value = t.name;
+    opt.value = t.name; // show technique.name only
     techniqueList.appendChild(opt);
   }
 }
@@ -252,6 +267,7 @@ function makeModalController(dom) {
     modalSubtitle,
     modalDescription,
     modalMilestones,
+    modalSuggestedTechniques,
     modalTechniques,
     modalTechniqueSearch,
   } = dom;
@@ -281,9 +297,26 @@ function makeModalController(dom) {
 
     for (const t of techniques) {
       const li = document.createElement("li");
-      // Required: "Level X: technique.name"
       li.textContent = `Level ${t.level}: ${t.name}`;
       modalTechniques.appendChild(li);
+    }
+  }
+
+  function renderSuggested(techniquesRaw, currentLevel) {
+    modalSuggestedTechniques.innerHTML = "";
+    const suggested = getSuggestedTechniques(techniquesRaw, currentLevel, 3);
+
+    if (suggested.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "No suggestions yet.";
+      modalSuggestedTechniques.appendChild(li);
+      return;
+    }
+
+    for (const t of suggested) {
+      const li = document.createElement("li");
+      li.textContent = `Level ${t.level}: ${t.name}`;
+      modalSuggestedTechniques.appendChild(li);
     }
   }
 
@@ -292,6 +325,9 @@ function makeModalController(dom) {
     if (!s) return;
 
     lastFocusedEl = document.activeElement;
+
+    const xp = xpBySkill.get(skillId) ?? 0;
+    const { lvl } = progressToNextLevel(xp);
 
     modalTitle.textContent = s.isElite ? `${s.name} (Elite)` : s.name;
     modalSubtitle.textContent = s.category === "physics" ? "Physics skill" : "Math skill";
@@ -310,7 +346,10 @@ function makeModalController(dom) {
       modalMilestones.appendChild(li);
     }
 
-    // Techniques
+    // Suggested next (max 3 based on current level)
+    renderSuggested(s.techniques ?? [], lvl);
+
+    // Full Techniques
     modalTechniqueSearch.value = "";
     renderModalTechniques(s.techniques ?? []);
 
@@ -367,7 +406,7 @@ async function addXp(dom) {
     skillId: sid,
     skillName: skill.name,
     activity,
-    technique: techniqueName || null, // store the name the user chose/typed
+    technique: techniqueName || null,
     note: note || null,
     xp,
   };
@@ -421,7 +460,6 @@ function wireFolderButton(dom, rerender) {
 
 // ---------- Init (after DOM + after skill scripts) ----------
 document.addEventListener("DOMContentLoaded", () => {
-  // DOM refs (safe only after DOMContentLoaded)
   const dom = {
     chooseFolderBtn: document.getElementById("chooseFolderBtn"),
     folderStatus: document.getElementById("folderStatus"),
@@ -444,6 +482,7 @@ document.addEventListener("DOMContentLoaded", () => {
     modalSubtitle: document.getElementById("modalSubtitle"),
     modalDescription: document.getElementById("modalDescription"),
     modalMilestones: document.getElementById("modalMilestones"),
+    modalSuggestedTechniques: document.getElementById("modalSuggestedTechniques"),
     modalTechniques: document.getElementById("modalTechniques"),
     modalTechniqueSearch: document.getElementById("modalTechniqueSearch"),
   };
