@@ -4,54 +4,76 @@ window.ACAD_RS_SKILLS.push({
   cap: 120,
   techniques: [
     // ------------------------------------------------------------
-    // First-sem core (Carroll-ish pace but capability-based) (L1–35)
+    // Core geometric + dynamical toolkit (kept ≤ 60)
     // ------------------------------------------------------------
-    { level: 1,  name: "Lorentzian geometry operational: metric, ∇, curvature; compute in examples" },
-    { level: 6,  name: "Geodesics + conserved quantities (Killing fields; effective potentials)" },
-    { level: 10, name: "Einstein equation from Einstein–Hilbert action (variation-level)" },
-    { level: 14, name: "Stress–energy + ∇_μ T^{μν}=0 (fluids; basic models)" },
-    { level: 18, name: "Schwarzschild geometry: horizons, geodesics, redshift; extension picture" },
-    { level: 22, name: "Linearized gravity: gauge, TT, GW basics (operational)" },
-    { level: 26, name: "Kerr geometry (intro): ergoregion, horizons, constants of motion" },
-    { level: 30, name: "Penrose diagrams: conformal compactification + causal reasoning (working)" },
-    { level: 35, name: "Raychaudhuri + focusing: energy conditions in applications (working)" },
+    { level: 1,  name: "Lorentzian geometry: metric, Levi–Civita connection, curvature; compute in coordinates" },
+    { level: 6,  name: "Geodesic flow: constants of motion from Killing fields; effective potential reduction" },
+    { level: 10, name: "Einstein–Hilbert variation: derive Einstein equation with boundary terms handled" },
+    { level: 14, name: "Stress–energy models: perfect fluids, scalar fields; derive ∇_μ T^{μν}=0 from diffeomorphism invariance" },
+    { level: 18, name: "Schwarzschild spacetime: horizon regularity, extensions, redshift, geodesic structure" },
+    { level: 22, name: "Linearized gravity: gauge fixing, TT decomposition, radiation field extraction" },
+    { level: 26, name: "Kerr spacetime: stationary axisymmetry, ergoregion, horizons, separability constants" },
+    { level: 30, name: "Conformal diagrams: compactification and causal classification of standard spacetimes" },
+    { level: 35, name: "Raychaudhuri equation: focusing, conjugate points, energy-condition implications" },
 
     // ------------------------------------------------------------
-    // Bridge tools that belong inside the first-year band (L35–45)
+    // Bridge tools inside the first-year band (≤ 60)
     // ------------------------------------------------------------
-    { level: 38, name: "Tetrads/soldering + spin connection: compute ω and curvature forms (working)" },
-    { level: 42, name: "Spinors in curved spacetime (setup): vierbein + covariant derivative" },
-    { level: 45, name: "FRW cosmology: derive Friedmann eqns; horizons; inflation bookkeeping (working)" },
+    { level: 38, name: "Tetrads and spin connection: Cartan structure equations; compute curvature 2-forms" },
+    { level: 42, name: "Spin structures in GR: Dirac operator on curved space; covariant spinor transport" },
+    { level: 45, name: "FRW geometry: Friedmann equations, horizons, perturbation bookkeeping at linear order" },
+
+    { level: 48, name: "3+1 decomposition: lapse, shift, induced metric; extrinsic curvature and Gauss–Codazzi" },
+    { level: 52, name: "ADM constraints: constraint solving and constraint propagation for initial data" },
+    { level: 55, name: "Einstein–Cartan theory: torsion from spin current; field equations and conserved currents" },
+    { level: 58, name: "Connection–triad variables: rewrite GR as constrained gauge theory; constraint algebra" },
+    { level: 60, name: "Bogoliubov transforms in curved space: particle notion from mode mixing in simple geometries" },
 
     // ------------------------------------------------------------
-    // Second-sem sequence (must be done by L60) (L45–60)
+    // Global/causal structure + black-hole spacetime geometry (lane)
+    // Starts near ~60; internal dependencies exist but no global chain
     // ------------------------------------------------------------
-    { level: 48, name: "3+1 split: lapse/shift, induced metric, extrinsic curvature (operational)" },
-    { level: 52, name: "ADM constraints: Hamiltonian/momentum constraints + initial data viewpoint" },
-    { level: 55, name: "Einstein–Cartan: torsion, spin current, field equations (working intro)" },
-    { level: 58, name: "Ashtekar variables (operational): triads/connections/constraints (intro)" },
-    { level: 60, name: "Hawking radiation toy models: moving mirror / Bogoliubov viewpoint (working)" },
+    { level: 60, name: "Causal structure: achronal sets, Cauchy development, global hyperbolicity criteria" },
+    { level: 66, name: "Null congruences: trapped surfaces, expansions, and singularity diagnostics" },
+    { level: 70, name: "Singularity theorems: hypotheses, causal lemmas, and proof skeleton organization" },
+    { level: 74, name: "Black-hole mechanics: surface gravity definitions and first-law bookkeeping via Killing horizons" },
+    { level: 82, name: "Stationary black-hole uniqueness: rigidity, asymptotic flatness, and boundary conditions at the horizon" },
+    { level: 90, name: "Black-hole perturbations: Regge–Wheeler/Zerilli and Teukolsky separations as operators" },
 
     // ------------------------------------------------------------
-    // Post-sequence: Wald / Hawking–Ellis / global GR / BH structure (L60–90)
+    // Asymptotic structure + radiation (lane)
     // ------------------------------------------------------------
-    { level: 66, name: "Global hyperbolicity + Cauchy surfaces + domains of dependence (working)" },
-    { level: 70, name: "Singularity theorems: hypotheses, causal structure, proof organization (working)" },
-    { level: 74, name: "BH mechanics: surface gravity, laws, first-law bookkeeping (working)" },
-    { level: 78, name: "QFT in curved spacetime (setup): modes, Bogoliubov transforms, Unruh effect" },
-    { level: 82, name: "Stationary BH uniqueness: assumptions (analyticity/energy conditions/asymptotics) (working)" },
-    { level: 86, name: "Asymptotic structure: null infinity, Bondi news, mass loss (intro→working)" },
-    { level: 90, name: "Perturbations of BH spacetimes: RW/Zerilli/Teukolsky organization (intro)" },
+    { level: 60, name: "Asymptotic flatness: conformal completion, null infinity, BMS symmetry data" },
+    { level: 68, name: "Bondi–Sachs framework: news tensor, mass aspect, and mass-loss balance laws" },
+    { level: 76, name: "Gravitational radiation at infinity: memory effects and flux formulas from asymptotic data" },
+    { level: 84, name: "Energy-momentum definitions: ADM and Bondi 4-momenta; positivity and rigidity statements" },
 
     // ------------------------------------------------------------
-    // Deeper structure + advanced tools (L90–118)
+    // Variational/canonical structures + conserved charges (lane)
     // ------------------------------------------------------------
-    { level: 94,  name: "Energy in GR: ADM/Bondi mass and quasi-local energy viewpoints (working)" },
-    { level: 98,  name: "Covariant phase space + Noether charges (Wald formalism intro)" },
-    { level: 104, name: "Characteristic formulation + constraint propagation mindset (working intro)" },
-    { level: 108, name: "Spinor/twistor methods (Penrose flavor): what they simplify (statement→working)" },
-    { level: 112, name: "Geometric analysis toolkit: comparison/maximum principles used in GR proofs (literacy)" },
-    { level: 116, name: "Semiclassical gravity: ⟨T_{μν}⟩, anomalies, backreaction structure (intro→working)" },
-    { level: 118, name: "Synthesis: canonical + covariant + global viewpoints as one coherent toolkit" }
+    { level: 60, name: "Boundary terms and well-posed variational principle: GHY term and corner data" },
+    { level: 66, name: "Covariant phase space: symplectic current, presymplectic form, and gauge degeneracies" },
+    { level: 72, name: "Noether charge formalism: diffeomorphism charges and first law from Hamiltonians" },
+    { level: 80, name: "Constraint algebras: hypersurface deformation algebra and observables under diffeomorphisms" },
+    { level: 92, name: "Quasilocal charges: Brown–York type constructions and boundary stress tensors" },
+
+    // ------------------------------------------------------------
+    // Curved-spacetime QFT + semiclassical gravity (lane)
+    // ------------------------------------------------------------
+    { level: 60, name: "Detector models in curved space: response functions from Wightman correlators" },
+    { level: 70, name: "Hadamard condition: short-distance singular structure and state selection criteria" },
+    { level: 74, name: "Renormalized ⟨T_{μν}⟩: point-splitting and local counterterm classification" },
+    { level: 80, name: "Heat kernel expansion: Seeley–DeWitt coefficients for effective actions on curved space" },
+    { level: 86, name: "Trace anomaly: curvature invariants and consistency constraints on effective actions" },
+    { level: 92, name: "Semiclassical Einstein equation: backreaction as a PDE system with renormalized sources" },
+
+    // ------------------------------------------------------------
+    // Geometric analysis + special methods (lane)
+    // ------------------------------------------------------------
+    { level: 78,  name: "Elliptic/hyperbolic PDE structure in GR: gauges, constraint solving, and energy estimates" },
+    { level: 88,  name: "Initial-value well-posedness: harmonic gauge reduction and continuation criteria" },
+    { level: 98,  name: "Characteristic evolution: null initial data, caustics, and constraint transport along generators" },
+    { level: 108, name: "Spinorial methods: Witten-type identities and positivity mechanisms" },
+    { level: 115, name: "Twistor methods: encode conformal geometry and massless fields via cohomological data" }
   ]
 });
