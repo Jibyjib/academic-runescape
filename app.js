@@ -1,255 +1,342 @@
 // app.js
 // Core app logic for Academic RuneScape (no server).
 // Uses File System Access API to persist xp_log.jsonl in a user-chosen folder.
-// Skill definitions are loaded via <script> tags into window.ACAD_RS_SKILLS.
+// Skills are loaded from ./skills/*.js (each exports default skill object).
 
-let dataDirHandle = null;
-let xpLogFileHandle = null;
-let xpLog = [];
+const XP_FILE = "xp_log.jsonl";
 
-const skills = (window.ACAD_RS_SKILLS || []);
+// ---------- DOM ----------
+const chooseFolderBtn = document.getElementById("chooseFolderBtn");
+const folderStatus = document.getElementById("folderStatus");
 
-// -----------------------------
-// RuneScape XP curve (classic)
-// -----------------------------
-function rsXpForLevel(level) {
-  let points = 0;
-  for (let i = 1; i < level; i++) {
-    points += Math.floor(i + 300 * Math.pow(2, i / 7));
+const skillGridPhysics = document.getElementById("skillGridPhysics");
+const skillGridElite = document.getElementById("skillGridElite");
+const skillGridMath = document.getElementById("skillGridMath");
+
+const skillSelect = document.getElementById("skillSelect");
+const techniqueInput = document.getElementById("techniqueInput");
+const techniqueList = document.getElementById("techniqueList");
+const activitySelect = document.getElementById("activitySelect");
+const noteInput = document.getElementById("noteInput");
+const addXpBtn = document.getElementById("addXpBtn");
+
+// Modal
+const modalBackdrop = document.getElementById("modalBackdrop");
+const skillModal = document.getElementById("skillModal");
+const closeModalBtn = document.getElementById("closeModalBtn");
+const modalTitle = document.getElementById("modalTitle");
+const modalSubtitle = document.getElementById("modalSubtitle");
+const modalDescription = document.getElementById("modalDescription");
+const modalMilestones = document.getElementById("modalMilestones");
+const modalTechniques = document.getElementById("modalTechniques");
+const modalTechniqueSearch = document.getElementById("modalTechniqueSearch");
+
+let folderHandle = null;
+
+// ---------- Skills ----------
+const skillModules = [
+  "./skills/classical_mechanics.js",
+  "./skills/electromagnetism.js",
+  "./skills/quantum_mechanics.js",
+  "./skills/general_relativity.js",
+  "./skills/quantum_field_theory.js",
+  "./skills/cosmology.js",
+  "./skills/stat_mech.js",
+  // math skills later: "./skills/real_analysis.js", etc
+];
+
+let skills = [];               // [{id, name, category, isElite, description, techniques, milestones}]
+let skillById = new Map();     // id -> skill
+
+// ---------- State ----------
+let xpBySkill = new Map();     // id -> total xp
+
+// ---------- Helpers ----------
+function clamp01(x) { return Math.max(0, Math.min(1, x)); }
+
+// Simple OSRS-ish leveling curve (you can replace later):
+function levelFromXp(xp) {
+  // Level 1 starts at 0 XP.
+  // This curve grows roughly like n^3 / 10. Adjust whenever.
+  let lvl = 1;
+  while (xp >= xpForLevel(lvl + 1) && lvl < 120) lvl++;
+  return lvl;
+}
+function xpForLevel(level) {
+  if (level <= 1) return 0;
+  return Math.floor(10 * Math.pow(level - 1, 3));
+}
+function progressToNextLevel(xp) {
+  const lvl = levelFromXp(xp);
+  const lo = xpForLevel(lvl);
+  const hi = xpForLevel(lvl + 1);
+  const frac = hi === lo ? 1 : (xp - lo) / (hi - lo);
+  return { lvl, frac: clamp01(frac), toNext: Math.max(0, hi - xp) };
+}
+
+function setFolderStatus() {
+  folderStatus.textContent = folderHandle ? "Folder chosen ✓" : "No folder chosen";
+}
+
+async function ensureFileHandle(dirHandle, filename) {
+  return await dirHandle.getFileHandle(filename, { create: true });
+}
+
+async function appendLineToFile(dirHandle, filename, line) {
+  const fileHandle = await ensureFileHandle(dirHandle, filename);
+  const writable = await fileHandle.createWritable({ keepExistingData: true });
+  const file = await fileHandle.getFile();
+  await writable.seek(file.size);
+  await writable.write(line + "\n");
+  await writable.close();
+}
+
+async function readAllLines(dirHandle, filename) {
+  try {
+    const fileHandle = await dirHandle.getFileHandle(filename, { create: true });
+    const file = await fileHandle.getFile();
+    const text = await file.text();
+    return text.split("\n").map(s => s.trim()).filter(Boolean);
+  } catch {
+    return [];
   }
-  return Math.floor(points / 4);
 }
 
-function levelFromXp(xp, cap) {
-  for (let lvl = 1; lvl <= cap; lvl++) {
-    if (xp < rsXpForLevel(lvl + 1)) return lvl;
-  }
-  return cap;
-}
+function renderAll() {
+  skillGridPhysics.innerHTML = "";
+  skillGridElite.innerHTML = "";
+  skillGridMath.innerHTML = "";
 
-// -----------------------------
-// XP award model (simple v1)
-// -----------------------------
-function computeXp(activity, unlockLevel) {
-  const base = unlockLevel * 5; // v1 scaling constant
-  const multipliers = {
-    reading: 1,
-    derivation: 2,
-    problems: 4,
-    chapter: 10,
-    book: 50
-  };
-  return Math.floor(base * (multipliers[activity] ?? 1));
-}
+  const physics = skills.filter(s => s.category === "physics" && !s.isElite);
+  const elite = skills.filter(s => s.category === "physics" && s.isElite);
+  const math = skills.filter(s => s.category === "math");
 
-// -----------------------------
-// Technique dropdown helpers
-// -----------------------------
-function populateTechniqueList(skillId) {
-  const list = document.getElementById("techniqueList");
-  const input = document.getElementById("techniqueInput");
+  for (const s of physics) skillGridPhysics.appendChild(renderSkillCard(s));
+  for (const s of elite) skillGridElite.appendChild(renderSkillCard(s));
+  for (const s of math) skillGridMath.appendChild(renderSkillCard(s));
 
-  list.innerHTML = "";
-  input.value = "";
-
-  const skill = skills.find(s => s.id === skillId);
-  const techniques = skill?.techniques || [];
-
-  for (const t of techniques) {
-    const opt = document.createElement("option");
-    opt.value = `${t.name} (L${t.level})`;
-    list.appendChild(opt);
-  }
-}
-
-function parseUnlockLevelFromTechnique(text) {
-  // Expect "... (L65)" at end
-  const m = text.match(/\(L(\d+)\)\s*$/);
-  if (!m) return null;
-  return parseInt(m[1], 10);
-}
-
-// -----------------------------
-// IndexedDB handle persistence
-// -----------------------------
-function openHandlesDb() {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open("academic-runescape", 1);
-    request.onupgradeneeded = () => {
-      request.result.createObjectStore("handles");
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-}
-
-async function saveHandle(handle) {
-  const db = await openHandlesDb();
-  await new Promise((resolve, reject) => {
-    const tx = db.transaction("handles", "readwrite");
-    tx.objectStore("handles").put(handle, "dataDir");
-    tx.oncomplete = () => resolve();
-    tx.onerror = () => reject(tx.error);
-  });
-}
-
-async function loadHandle() {
-  const db = await openHandlesDb();
-  return await new Promise((resolve) => {
-    const tx = db.transaction("handles", "readonly");
-    const store = tx.objectStore("handles");
-    const getReq = store.get("dataDir");
-    getReq.onsuccess = () => resolve(getReq.result || null);
-    getReq.onerror = () => resolve(null);
-  });
-}
-
-// -----------------------------
-// File I/O
-// -----------------------------
-async function chooseFolder() {
-  dataDirHandle = await window.showDirectoryPicker();
-  await saveHandle(dataDirHandle);
-  await initDataFiles();
-}
-
-async function initDataFiles() {
-  xpLogFileHandle = await dataDirHandle.getFileHandle("xp_log.jsonl", { create: true });
-  await loadXpLog();
-  initUI();
-}
-
-async function loadXpLog() {
-  const file = await xpLogFileHandle.getFile();
-  const text = await file.text();
-
-  xpLog = text
-    .split("\n")
-    .filter(line => line.trim() !== "")
-    .map(line => {
-      try {
-        return JSON.parse(line);
-      } catch {
-        return null;
-      }
-    })
-    .filter(Boolean);
-}
-
-// -----------------------------
-// Aggregation
-// -----------------------------
-function totalXpForSkill(skillId) {
-  return xpLog
-    .filter(entry => entry.skill === skillId)
-    .reduce((sum, entry) => sum + (entry.xp || 0), 0);
-}
-
-// -----------------------------
-// UI
-// -----------------------------
-function initUI() {
-  document.getElementById("folderSelect").style.display = "none";
-  document.getElementById("app").style.display = "block";
-
-  const skillSelect = document.getElementById("skillSelect");
+  // Skill dropdown
   skillSelect.innerHTML = "";
-
-  // Populate skills dropdown
-  for (const skill of skills) {
-    const option = document.createElement("option");
-    option.value = skill.id;
-    option.textContent = skill.name;
-    skillSelect.appendChild(option);
+  for (const s of skills) {
+    const opt = document.createElement("option");
+    opt.value = s.id;
+    opt.textContent = s.isElite ? `${s.name} (Elite)` : s.name;
+    skillSelect.appendChild(opt);
   }
-
-  // Technique list reacts to selected skill
-  populateTechniqueList(skillSelect.value);
-  skillSelect.addEventListener("change", (e) => populateTechniqueList(e.target.value));
-
-  renderSkills();
+  updateTechniqueDatalist();
 }
 
-function renderSkills() {
-  const grid = document.getElementById("skillGrid");
-  grid.innerHTML = "";
+function renderSkillCard(skill) {
+  const xp = xpBySkill.get(skill.id) ?? 0;
+  const { lvl, frac } = progressToNextLevel(xp);
 
-  for (const skill of skills) {
-    const xp = totalXpForSkill(skill.id);
-    const lvl = levelFromXp(xp, skill.cap);
+  const card = document.createElement("div");
+  card.className = "skillCard";
 
-    const nextXp = rsXpForLevel(lvl + 1);
-    const prevXp = rsXpForLevel(lvl);
+  const titleBtn = document.createElement("button");
+  titleBtn.className = "skillTitleBtn";
+  titleBtn.textContent = skill.name;
+  titleBtn.addEventListener("click", () => openSkillModal(skill.id));
 
-    const denom = (nextXp - prevXp) || 1;
-    const progress = Math.max(0, Math.min(100, ((xp - prevXp) / denom) * 100));
+  const lvlEl = document.createElement("div");
+  lvlEl.textContent = `Level ${lvl}`;
 
-    const card = document.createElement("div");
-    card.className = "skillCard";
-    card.innerHTML = `
-      <h3>${skill.name}</h3>
-      <p>Level ${lvl}</p>
-      <p>${xp.toLocaleString()} XP</p>
-      <div class="progressBar">
-        <div class="progressFill" style="width:${progress}%"></div>
-      </div>
-    `;
-    grid.appendChild(card);
+  const xpEl = document.createElement("div");
+  xpEl.textContent = `${xp} XP`;
+
+  const bar = document.createElement("div");
+  bar.className = "progressBar";
+
+  const fill = document.createElement("div");
+  fill.className = "progressFill";
+  fill.style.width = `${Math.floor(frac * 100)}%`;
+
+  bar.appendChild(fill);
+
+  card.appendChild(titleBtn);
+  card.appendChild(document.createElement("div")).style.height = "6px";
+  card.appendChild(lvlEl);
+  card.appendChild(xpEl);
+  card.appendChild(bar);
+
+  return card;
+}
+
+function updateTechniqueDatalist() {
+  const sid = skillSelect.value;
+  const s = skillById.get(sid);
+  techniqueList.innerHTML = "";
+  if (!s) return;
+
+  for (const t of (s.techniques ?? [])) {
+    const opt = document.createElement("option");
+    opt.value = t;
+    techniqueList.appendChild(opt);
+  }
+}
+
+// ---------- Modal ----------
+let lastFocusedEl = null;
+
+function openSkillModal(skillId) {
+  const s = skillById.get(skillId);
+  if (!s) return;
+
+  lastFocusedEl = document.activeElement;
+
+  modalTitle.textContent = s.isElite ? `${s.name} (Elite)` : s.name;
+  modalSubtitle.textContent = s.category === "physics" ? "Physics skill" : "Math skill";
+  modalDescription.textContent = s.description ?? "";
+
+  // Milestones
+  modalMilestones.innerHTML = "";
+  for (const m of (s.milestones ?? [])) {
+    const li = document.createElement("li");
+    li.textContent = `Level ${m.level}: ${m.text}`;
+    modalMilestones.appendChild(li);
+  }
+  if (!s.milestones || s.milestones.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "No milestones yet.";
+    modalMilestones.appendChild(li);
+  }
+
+  // Techniques
+  modalTechniqueSearch.value = "";
+  renderModalTechniques(s.techniques ?? []);
+
+  modalBackdrop.hidden = false;
+  skillModal.hidden = false;
+
+  // focus trap starter
+  closeModalBtn.focus();
+}
+
+function renderModalTechniques(techniques) {
+  modalTechniques.innerHTML = "";
+  if (techniques.length === 0) {
+    const li = document.createElement("li");
+    li.textContent = "No techniques yet.";
+    modalTechniques.appendChild(li);
+    return;
+  }
+  for (const t of techniques) {
+    const li = document.createElement("li");
+    li.textContent = t;
+    modalTechniques.appendChild(li);
+  }
+}
+
+function closeSkillModal() {
+  modalBackdrop.hidden = true;
+  skillModal.hidden = true;
+  if (lastFocusedEl && typeof lastFocusedEl.focus === "function") lastFocusedEl.focus();
+}
+
+function isModalOpen() {
+  return !skillModal.hidden;
+}
+
+// ESC + backdrop click
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && isModalOpen()) closeSkillModal();
+});
+modalBackdrop.addEventListener("click", () => closeSkillModal());
+closeModalBtn.addEventListener("click", () => closeSkillModal());
+
+// technique filter
+modalTechniqueSearch.addEventListener("input", () => {
+  const sid = findSkillIdByModalTitle();
+  const s = skillById.get(sid);
+  if (!s) return;
+
+  const q = modalTechniqueSearch.value.trim().toLowerCase();
+  const list = (s.techniques ?? []).filter(t => t.toLowerCase().includes(q));
+  renderModalTechniques(list);
+});
+
+function findSkillIdByModalTitle() {
+  // modalTitle is derived from skill.name; find the first match
+  const raw = modalTitle.textContent.replace(" (Elite)", "").trim();
+  const match = skills.find(s => s.name === raw);
+  return match ? match.id : "";
+}
+
+// ---------- XP persistence ----------
+async function rebuildXpFromLog() {
+  xpBySkill = new Map();
+  const lines = folderHandle ? await readAllLines(folderHandle, XP_FILE) : [];
+  for (const line of lines) {
+    try {
+      const entry = JSON.parse(line);
+      const sid = entry.skillId;
+      const amt = Number(entry.xp ?? 0);
+      if (!skillById.has(sid)) continue;
+      xpBySkill.set(sid, (xpBySkill.get(sid) ?? 0) + amt);
+    } catch {
+      // ignore malformed lines
+    }
   }
 }
 
 async function addXp() {
-  const skillId = document.getElementById("skillSelect").value;
-  const techniqueText = document.getElementById("techniqueInput").value.trim();
-  const activity = document.getElementById("activityType").value;
-  const note = document.getElementById("note").value;
+  const sid = skillSelect.value;
+  const skill = skillById.get(sid);
+  if (!skill) return;
 
-  const unlockLevel = parseUnlockLevelFromTechnique(techniqueText);
-  if (!unlockLevel || unlockLevel <= 0) {
-    alert("Pick a technique from the list (must end with something like (L65)).");
-    return;
-  }
+  const technique = techniqueInput.value.trim();
+  const activity = activitySelect.value;
+  const note = noteInput.value.trim();
 
-  const xp = computeXp(activity, unlockLevel);
+  // For now: fixed XP per add. You can later compute this from activity/technique.
+  const xp = 5;
 
   const entry = {
     ts: new Date().toISOString(),
-    skill: skillId,
-    technique: techniqueText.replace(/\s*\(L\d+\)\s*$/, ""), // store name cleanly
-    unlockLevel,
+    skillId: sid,
+    skillName: skill.name,
     activity,
+    technique: technique || null,
+    note: note || null,
     xp,
-    note
   };
 
-  const writable = await xpLogFileHandle.createWritable({ keepExistingData: true });
-  await writable.write(JSON.stringify(entry) + "\n");
-  await writable.close();
+  if (folderHandle) {
+    await appendLineToFile(folderHandle, XP_FILE, JSON.stringify(entry));
+  }
 
-  xpLog.push(entry);
-  renderSkills();
+  xpBySkill.set(sid, (xpBySkill.get(sid) ?? 0) + xp);
 
-  // Clear inputs
-  document.getElementById("techniqueInput").value = "";
-  document.getElementById("note").value = "";
+  techniqueInput.value = "";
+  noteInput.value = "";
+  renderAll();
 }
 
-// -----------------------------
-// Wire up events
-// -----------------------------
-document.getElementById("chooseFolder").addEventListener("click", chooseFolder);
-document.getElementById("addXp").addEventListener("click", addXp);
-
-// Auto-load saved folder on startup
-window.addEventListener("DOMContentLoaded", async () => {
-  // If skills didn't load, fail loudly (usually means missing script tags)
-  if (!skills.length) {
-    console.warn("No skills loaded. Check index.html skill <script> tags.");
+// ---------- Init ----------
+async function loadSkills() {
+  const loaded = [];
+  for (const path of skillModules) {
+    const mod = await import(path);
+    loaded.push(mod.default);
   }
+  skills = loaded;
+  skillById = new Map(skills.map(s => [s.id, s]));
+}
 
-  const savedHandle = await loadHandle();
-  if (savedHandle) {
-    dataDirHandle = savedHandle;
-    await initDataFiles();
+chooseFolderBtn.addEventListener("click", async () => {
+  try {
+    folderHandle = await window.showDirectoryPicker();
+    setFolderStatus();
+    await rebuildXpFromLog();
+    renderAll();
+  } catch {
+    // user cancelled
   }
 });
+
+skillSelect.addEventListener("change", () => updateTechniqueDatalist());
+addXpBtn.addEventListener("click", () => addXp());
+
+await loadSkills();
+setFolderStatus();
+renderAll();
