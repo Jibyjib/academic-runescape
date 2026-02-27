@@ -113,12 +113,20 @@ function saveLocalLog(log) {
   }
 }
 
-// ---------- Skills (loaded from window.ACAD_RS_SKILLS) ----------
+function withDefaults(s) {
+  return {
+    category: s.category ?? "physics",   // default to physics
+    isElite: s.isElite ?? (s.cap === 120),
+    description: s.description ?? "",
+    milestones: s.milestones ?? [],
+    techniques: s.techniques ?? [],
+    ...s
+  };
+}
+
 function refreshSkillsFromRegistry() {
-  // Required pattern:
-  //   let skills = window.ACAD_RS_SKILLS || [];
-  //   let skillById = new Map(skills.map(s => [s.id, s]));
-  skills = window.ACAD_RS_SKILLS || [];
+  const raw = window.ACAD_RS_SKILLS || [];
+  skills = raw.map(withDefaults);
   skillById = new Map(skills.map(s => [s.id, s]));
 }
 
