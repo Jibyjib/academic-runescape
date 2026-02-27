@@ -1,9 +1,11 @@
 // app.js
-// Core app logic for Academic RuneScape (no server).
-// Uses File System Access API to persist xp_log.jsonl in a user-chosen folder.
-// Skills are loaded from ./skills/*.js (each exports default skill object).
+// Core app logic for Academic RuneScape (NO SERVER / file:// friendly).
+// - Skills are loaded via classic <script src="skills/..."> tags into window.SKILL_DEFS
+// - XP persistence: localStorage by default
+// - Optional: File System Access API if available + user picks a folder (kept, but not required)
 
 const XP_FILE = "xp_log.jsonl";
+const LS_KEY = "academic_runescape_xp_log_v1";
 
 // ---------- DOM ----------
 const chooseFolderBtn = document.getElementById("chooseFolderBtn");
@@ -33,31 +35,19 @@ const modalTechniqueSearch = document.getElementById("modalTechniqueSearch");
 
 let folderHandle = null;
 
-// ---------- Skills ----------
-const skillModules = [
-  "./skills/classical_mechanics.js",
-  "./skills/electromagnetism.js",
-  "./skills/quantum_mechanics.js",
-  "./skills/general_relativity.js",
-  "./skills/quantum_field_theory.js",
-  "./skills/cosmology.js",
-  "./skills/stat_mech.js",
-  // math skills later: "./skills/real_analysis.js", etc
-];
-
-let skills = [];               // [{id, name, category, isElite, description, techniques, milestones}]
-let skillById = new Map();     // id -> skill
+// ---------- Skills (loaded from window.SKILL_DEFS) ----------
+let skills = Array.isArray(window.SKILL_DEFS) ? window.SKILL_DEFS : [];
+let skillById = new Map(skills.map(s => [s.id, s]));
 
 // ---------- State ----------
 let xpBySkill = new Map();     // id -> total xp
+let xpLog = [];                // array of entries (localStorage)
 
 // ---------- Helpers ----------
 function clamp01(x) { return Math.max(0, Math.min(1, x)); }
 
 // Simple OSRS-ish leveling curve (you can replace later):
 function levelFromXp(xp) {
-  // Level 1 starts at 0 XP.
-  // This curve grows roughly like n^3 / 10. Adjust whenever.
   let lvl = 1;
   while (xp >= xpForLevel(lvl + 1) && lvl < 120) lvl++;
   return lvl;
@@ -74,8 +64,20 @@ function progressToNextLevel(xp) {
   return { lvl, frac: clamp01(frac), toNext: Math.max(0, hi - xp) };
 }
 
+// ---------- Folder (optional) ----------
+function canUseFolderPicker() {
+  return !!(window.isSecureContext && window.showDirectoryPicker);
+}
+
 function setFolderStatus() {
-  folderStatus.textContent = folderHandle ? "Folder chosen ✓" : "No folder chosen";
+  if (!folderStatus) return;
+  if (folderHandle) {
+    folderStatus.textContent = "Folder chosen ✓";
+  } else if (canUseFolderPicker()) {
+    folderStatus.textContent = "No folder chosen";
+  } else {
+    folderStatus.textContent = "Folder saving unavailable (using local storage)";
+  }
 }
 
 async function ensureFileHandle(dirHandle, filename) {
@@ -102,6 +104,26 @@ async function readAllLines(dirHandle, filename) {
   }
 }
 
+// ---------- LocalStorage XP log ----------
+function loadLocalLog() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalLog(log) {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(log));
+  } catch {
+    // ignore (storage might be disabled)
+  }
+}
+
+// ---------- Rendering ----------
 function renderAll() {
   skillGridPhysics.innerHTML = "";
   skillGridElite.innerHTML = "";
@@ -135,6 +157,7 @@ function renderSkillCard(skill) {
 
   const titleBtn = document.createElement("button");
   titleBtn.className = "skillTitleBtn";
+  titleBtn.type = "button";
   titleBtn.textContent = skill.name;
   titleBtn.addEventListener("click", () => openSkillModal(skill.id));
 
@@ -207,8 +230,6 @@ function openSkillModal(skillId) {
 
   modalBackdrop.hidden = false;
   skillModal.hidden = false;
-
-  // focus trap starter
   closeModalBtn.focus();
 }
 
@@ -256,14 +277,23 @@ modalTechniqueSearch.addEventListener("input", () => {
 });
 
 function findSkillIdByModalTitle() {
-  // modalTitle is derived from skill.name; find the first match
   const raw = modalTitle.textContent.replace(" (Elite)", "").trim();
   const match = skills.find(s => s.name === raw);
   return match ? match.id : "";
 }
 
 // ---------- XP persistence ----------
-async function rebuildXpFromLog() {
+function rebuildXpFromLocalLog() {
+  xpBySkill = new Map();
+  for (const entry of xpLog) {
+    const sid = entry.skillId;
+    const amt = Number(entry.xp ?? 0);
+    if (!skillById.has(sid)) continue;
+    xpBySkill.set(sid, (xpBySkill.get(sid) ?? 0) + amt);
+  }
+}
+
+async function rebuildXpFromFolderLog() {
   xpBySkill = new Map();
   const lines = folderHandle ? await readAllLines(folderHandle, XP_FILE) : [];
   for (const line of lines) {
@@ -288,7 +318,6 @@ async function addXp() {
   const activity = activitySelect.value;
   const note = noteInput.value.trim();
 
-  // For now: fixed XP per add. You can later compute this from activity/technique.
   const xp = 5;
 
   const entry = {
@@ -301,8 +330,17 @@ async function addXp() {
     xp,
   };
 
+  // Always write to localStorage log
+  xpLog.push(entry);
+  saveLocalLog(xpLog);
+
+  // Also write to folder log if enabled
   if (folderHandle) {
-    await appendLineToFile(folderHandle, XP_FILE, JSON.stringify(entry));
+    try {
+      await appendLineToFile(folderHandle, XP_FILE, JSON.stringify(entry));
+    } catch {
+      // ignore folder write errors
+    }
   }
 
   xpBySkill.set(sid, (xpBySkill.get(sid) ?? 0) + xp);
@@ -313,30 +351,50 @@ async function addXp() {
 }
 
 // ---------- Init ----------
-async function loadSkills() {
-  const loaded = [];
-  for (const path of skillModules) {
-    const mod = await import(path);
-    loaded.push(mod.default);
-  }
-  skills = loaded;
+function refreshSkillsFromRegistry() {
+  skills = Array.isArray(window.SKILL_DEFS) ? window.SKILL_DEFS : [];
   skillById = new Map(skills.map(s => [s.id, s]));
 }
 
-chooseFolderBtn.addEventListener("click", async () => {
-  try {
-    folderHandle = await window.showDirectoryPicker();
-    setFolderStatus();
-    await rebuildXpFromLog();
-    renderAll();
-  } catch {
-    // user cancelled
+function wireFolderButton() {
+  if (!chooseFolderBtn) return;
+
+  if (!canUseFolderPicker()) {
+    chooseFolderBtn.disabled = true;
+    chooseFolderBtn.title = "Folder picker requires https:// or http://localhost";
+    return;
   }
-});
 
-skillSelect.addEventListener("change", () => updateTechniqueDatalist());
-addXpBtn.addEventListener("click", () => addXp());
+  chooseFolderBtn.addEventListener("click", async () => {
+    try {
+      folderHandle = await window.showDirectoryPicker();
+      setFolderStatus();
 
-await loadSkills();
-setFolderStatus();
-renderAll();
+      // Rebuild XP from folder (authoritative if you choose one)
+      await rebuildXpFromFolderLog();
+
+      // (Optional) also keep local totals in sync by rebuilding local too
+      // xpLog = loadLocalLog(); rebuildXpFromLocalLog();
+
+      renderAll();
+    } catch {
+      // user cancelled
+    }
+  });
+}
+
+(function init() {
+  refreshSkillsFromRegistry();
+
+  // localStorage XP load
+  xpLog = loadLocalLog();
+  rebuildXpFromLocalLog();
+
+  setFolderStatus();
+  wireFolderButton();
+
+  skillSelect.addEventListener("change", () => updateTechniqueDatalist());
+  addXpBtn.addEventListener("click", () => addXp());
+
+  renderAll();
+})();
